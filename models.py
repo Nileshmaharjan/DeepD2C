@@ -215,7 +215,16 @@ def build_model(encoder,
                 yuv_scales,
                 args,
                 global_step):
+    # applies a given transform to the image
+    # Here, image_input = images (a tensor of some shape)
+    # M[:, 1, :] (Projective transform matrix)
+    # Bilinear Interpolation uses a weighted average of the four nearest cell centers. The closer an input cell
+    # center is to the output cell center, the higher the influence of its value is on the output cell value.
+
+    print(M[:, 1, :], "projective_transform_matrix")
+
     input_warped = tf.contrib.image.transform(image_input, M[:, 1, :], interpolation='BILINEAR')
+
     mask_warped = tf.contrib.image.transform(tf.ones_like(input_warped), M[:, 1, :], interpolation='BILINEAR')
     input_warped += (1 - mask_warped) * image_input
 
@@ -283,6 +292,7 @@ def build_model(encoder,
     falloff_im = tf.convert_to_tensor(falloff_im, dtype=tf.float32)
     falloff_im *= l2_edge_gain
 
+    # convert image from RGB to YUV format (better format to store color information of the image)
     encoded_image_yuv = tf.image.rgb_to_yuv(encoded_image)
     image_input_yuv = tf.image.rgb_to_yuv(image_input)
     im_diff = encoded_image_yuv - image_input_yuv

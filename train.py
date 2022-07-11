@@ -40,7 +40,9 @@ def get_img_batch(files_list,
             img_cover = np.zeros((size[0],size[1],3), dtype=np.float32)
         batch_cover.append(img_cover)
 
-        secret = np.random.binomial(1, .5, secret_size)
+        secret = np.random.binomial(1, .5, secret_size) # (n - number of trials,
+        # p - probability of occurence of each trial,
+        # size - shape of returned array)
         batch_secret.append(secret)
 
     batch_cover, batch_secret = np.array(batch_cover), np.array(batch_secret)
@@ -52,12 +54,12 @@ def get_img_batch(files_list,
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exp_name', type=str)
-    parser.add_argument('--secret_size', type=int, default=20)
-    parser.add_argument('--num_steps', type=int, default=100000)
-    parser.add_argument('--batch_size', type=int, default=4)
-    parser.add_argument('--lr', type=float, default=.0001)
-    parser.add_argument('--l2_loss_scale', type=float, default=1.5)
+    parser.add_argument('--exp_name', type=str) # experiment name
+    parser.add_argument('--secret_size', type=int, default=20) # secret size
+    parser.add_argument('--num_steps', type=int, default=26265) # number of steps
+    parser.add_argument('--batch_size', type=int, default=4) # batch size
+    parser.add_argument('--lr', type=float, default=.0001) # learning rate
+    parser.add_argument('--l2_loss_scale', type=float, default=1.5) # L2 regularization params
     parser.add_argument('--l2_loss_ramp', type=int, default=20000)
     parser.add_argument('--l2_edge_gain', type=float, default=10.0)
     parser.add_argument('--l2_edge_ramp', type=int, default=20000)
@@ -69,15 +71,17 @@ def main():
     parser.add_argument('--G_loss_scale', type=float, default=1)
     parser.add_argument('--G_loss_ramp', type=int, default=20000)
     parser.add_argument('--borders', type=str, choices=['no_edge','black','random','randomrgb','image','white'], default='black')
-    parser.add_argument('--y_scale', type=float, default=1.0)
-    parser.add_argument('--u_scale', type=float, default=1.0)
-    parser.add_argument('--v_scale', type=float, default=1.0)
+    parser.add_argument('--y_scale', type=float, default=1.0)  # luminance value in YUV format
+    parser.add_argument('--u_scale', type=float, default=1.0)  # Chrominance value in YUV format (CB - blueness of the
+    # pixel, x coordinate in chrominance plane )
+    parser.add_argument('--v_scale', type=float, default=1.0)  # Chrominance value in YUV format (CR - blueness of the
+    # pixel, y coordinate in chrominance plane )
     parser.add_argument('--no_gan', action='store_true')
     parser.add_argument('--rnd_trans', type=float, default=.1)
-    parser.add_argument('--rnd_bri', type=float, default=.3)
-    parser.add_argument('--rnd_noise', type=float, default=.02)
-    parser.add_argument('--rnd_sat', type=float, default=1.0)
-    parser.add_argument('--rnd_hue', type=float, default=.1)
+    parser.add_argument('--rnd_bri', type=float, default=.3) # random brightness
+    parser.add_argument('--rnd_noise', type=float, default=.02) # random noise
+    parser.add_argument('--rnd_sat', type=float, default=1.0) # random saturation
+    parser.add_argument('--rnd_hue', type=float, default=.1) # random hue
     parser.add_argument('--contrast_low', type=float, default=.5)
     parser.add_argument('--contrast_high', type=float, default=1.5)
     parser.add_argument('--jpeg_quality', type=float, default=25)
@@ -106,11 +110,20 @@ def main():
     height = 256
     width = 256
 
+    # placeholder variable help assign data to later date.
+    # allows creating operations and building computational graph without needing data
+
     secret_pl = tf.placeholder(shape=[None,args.secret_size],dtype=tf.float32,name="input_prep")
     image_pl = tf.placeholder(shape=[None,height,width,3],dtype=tf.float32,name="input_hide")
     M_pl = tf.placeholder(shape=[None,2,8],dtype=tf.float32,name="input_transform")
+
+    # tf variable represents tensor whose value can be changed running ops on it.
     global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
+
+    # physical meaning ??
     loss_scales_pl = tf.placeholder(shape=[4],dtype=tf.float32,name="input_loss_scales")
+
+    # physical meaning ??
     l2_edge_gain_pl = tf.placeholder(shape=[1],dtype=tf.float32,name="input_edge_gain")
     yuv_scales_pl = tf.placeholder(shape=[3],dtype=tf.float32,name="input_yuv_scales")
 
