@@ -9,6 +9,7 @@ tf.disable_v2_behavior()
 import utils
 import models
 from os.path import join
+import time
 
 
 # Specify your training path.
@@ -56,7 +57,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp_name', type=str) # experiment name
     parser.add_argument('--secret_size', type=int, default=20) # secret size
-    parser.add_argument('--num_steps', type=int, default=26265) # number of steps
+    parser.add_argument('--num_steps', type=int, default=1000) # number of steps
     parser.add_argument('--batch_size', type=int, default=4) # batch size
     parser.add_argument('--lr', type=float, default=.0001) # learning rate
     parser.add_argument('--l2_loss_scale', type=float, default=1.5) # L2 regularization params
@@ -98,7 +99,8 @@ def main():
     args = parser.parse_args()
 
     EXP_NAME = args.exp_name
-
+    SAVED_LOG_NAME = EXP_NAME + "-{}".format(int(time.time()))
+    SAVED_MODEL_NAME = EXP_NAME + "-{}".format(int(time.time()))
     files_list = glob.glob(join(TRAIN_PATH,"**/*"))
 
 
@@ -173,7 +175,7 @@ def main():
     if args.pretrained is not None:
         saver.restore(sess, args.pretrained)
 
-    writer = tf.summary.FileWriter(join(LOGS_Path,EXP_NAME),sess.graph)
+    writer = tf.summary.FileWriter(join(LOGS_Path,SAVED_LOG_NAME),sess.graph)
 
     total_steps = len(files_list)//args.batch_size + 1
     global_step = 0
@@ -249,9 +251,11 @@ def main():
     with tf.Session(graph=tf.Graph()) as session:
         tf.import_graph_def(constant_graph_def, name='')
         tf.saved_model.simple_save(session,
-                                   SAVED_MODELS + '/' + EXP_NAME,
+                                   SAVED_MODELS + '/' + SAVED_MODEL_NAME,
                                    inputs={'secret':secret_pl, 'image':image_pl},
                                    outputs={'stegastamp':deploy_hide_image_op, 'residual':residual_op, 'decoded':deploy_decoder_op})
+        # tf.saved_model.loader.load(
+        #     session, [tf.saved_model.tag_constants.SERVING], SAVED_MODELS + '/' + EXP_NAME)
 
     writer.close()
 
