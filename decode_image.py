@@ -57,6 +57,7 @@ def main():
 
         decoded_data = sess.run([output_secret],feed_dict=feed_dict)[0][0]
 
+        # value  changed compared to stega stamp here?
         packet_binary = "".join([str(int(bit)) for bit in decoded_data[:16]])
         packet = bytes(int(packet_binary[i : i + 8], 2) for i in range(0, len(packet_binary), 8))
         packet = bytearray(packet)
