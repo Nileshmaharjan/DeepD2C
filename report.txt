@@ -1,0 +1,450 @@
+--------------------------------------------------------------------------------
+Processing file 'models.py'
+ outputting to 'models_v2.py'
+--------------------------------------------------------------------------------
+
+'models.py' Line 129
+--------------------------------------------------------------------------------
+
+Added keyword 'input_tensor' to reordered function 'tf.reduce_mean'
+
+    Old:         output = tf.reduce_mean(x)
+                                            
+    New:         output = tf.reduce_mean(input_tensor=x)
+                                         ~~~~~~~~~~~~~   
+
+'models.py' Line 134
+--------------------------------------------------------------------------------
+
+Added keyword 'input' to reordered function 'tf.shape'
+
+    Old:     sh = tf.shape(encoded_image)
+                                          
+    New:     sh = tf.shape(input=encoded_image)
+                           ~~~~~~               
+
+'models.py' Line 136
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.to_float' to 'tf.compat.v1.to_float'
+
+    Old:     ramp_fn = lambda ramp: tf.minimum(tf.to_float(global_step) / ramp, 1.)
+                                               ~~~~~~~~~~~                          
+    New:     ramp_fn = lambda ramp: tf.minimum(tf.compat.v1.to_float(global_step) / ramp, 1.)
+                                               ~~~~~~~~~~~~~~~~~~~~~                          
+
+'models.py' Line 144
+--------------------------------------------------------------------------------
+
+tf.cond no longer takes 'strict'. Now 'strict' defaults to True.fn1/fn2 arguments are replaced by true_fn/false_fn.
+
+    Old:     jpeg_factor = tf.cond(tf.less(jpeg_quality, 50), lambda: 5000. / jpeg_quality,
+                           ~~~~~~~                                                          
+    New:     jpeg_factor = tf.cond(tf.less(jpeg_quality, 50), lambda: 5000. / jpeg_quality,
+                           ~~~~~~~                                                          
+
+'models.py' Line 158
+--------------------------------------------------------------------------------
+
+WARNING: use_cudnn_on_gpu argument has been removed and "filter" was renamed to "filters"
+
+    Old:     encoded_image = tf.nn.conv2d(encoded_image, f, [1, 1, 1, 1], padding='SAME')
+                             ~~~~~~~~~~~~                                                 
+    New:     encoded_image = tf.nn.conv2d(encoded_image, f, [1, 1, 1, 1], padding='SAME')
+                             ~~~~~~~~~~~~                                                 
+
+'models.py' Line 161
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.random_normal' to 'tf.random.normal'
+Added keyword 'input' to reordered function 'tf.shape'
+
+    Old:     noise = tf.random_normal(shape=tf.shape(encoded_image), mean=0.0, stddev=rnd_noise, dtype=tf.float32)
+                     ~~~~~~~~~~~~~~~~                                                                              
+    New:     noise = tf.random.normal(shape=tf.shape(input=encoded_image), mean=0.0, stddev=rnd_noise, dtype=tf.float32)
+                     ~~~~~~~~~~~~~~~~                ~~~~~~                                                              
+
+'models.py' Line 166
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.random_uniform' to 'tf.random.uniform'
+Added keyword 'input' to reordered function 'tf.shape'
+
+    Old:     contrast_scale = tf.random_uniform(shape=[tf.shape(encoded_image)[0]], minval=contrast_params[0],
+                              ~~~~~~~~~~~~~~~~~                                                                
+    New:     contrast_scale = tf.random.uniform(shape=[tf.shape(input=encoded_image)[0]], minval=contrast_params[0],
+                              ~~~~~~~~~~~~~~~~~                 ~~~~~~                                               
+
+'models.py' Line 168
+--------------------------------------------------------------------------------
+
+Added keyword 'input' to reordered function 'tf.shape'
+
+    Old:     contrast_scale = tf.reshape(contrast_scale, shape=[tf.shape(encoded_image)[0], 1, 1, 1])
+                                                                                                      
+    New:     contrast_scale = tf.reshape(contrast_scale, shape=[tf.shape(input=encoded_image)[0], 1, 1, 1])
+                                                                         ~~~~~~                             
+
+'models.py' Line 174
+--------------------------------------------------------------------------------
+
+Added keyword 'input_tensor' to reordered function 'tf.reduce_sum'
+
+    Old:     encoded_image_lum = tf.expand_dims(tf.reduce_sum(encoded_image * tf.constant([.3, .6, .1]), axis=3), 3)
+                                                                                                                     
+    New:     encoded_image_lum = tf.expand_dims(tf.reduce_sum(input_tensor=encoded_image * tf.constant([.3, .6, .1]), axis=3), 3)
+                                                              ~~~~~~~~~~~~~                                                       
+
+'models.py' Line 182
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:         summaries = [tf.summary.scalar('transformer/rnd_bri', rnd_bri),
+                              ~~~~~~~~~~~~~~~~~                                  
+    New:         summaries = [tf.compat.v1.summary.scalar('transformer/rnd_bri', rnd_bri),
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                  
+
+'models.py' Line 184
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                      tf.summary.scalar('transformer/rnd_hue', rnd_hue),
+                              ~~~~~~~~~~~~~~~~~                                  
+    New:                      tf.compat.v1.summary.scalar('transformer/rnd_hue', rnd_hue),
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                  
+
+'models.py' Line 185
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                      tf.summary.scalar('transformer/rnd_noise', rnd_noise),
+                              ~~~~~~~~~~~~~~~~~                                      
+    New:                      tf.compat.v1.summary.scalar('transformer/rnd_noise', rnd_noise),
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                      
+
+'models.py' Line 186
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                      tf.summary.scalar('transformer/contrast_low', contrast_low),
+                              ~~~~~~~~~~~~~~~~~                                            
+    New:                      tf.compat.v1.summary.scalar('transformer/contrast_low', contrast_low),
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                            
+
+'models.py' Line 187
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                      tf.summary.scalar('transformer/contrast_high', contrast_high),
+                              ~~~~~~~~~~~~~~~~~                                              
+    New:                      tf.compat.v1.summary.scalar('transformer/contrast_high', contrast_high),
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                              
+
+'models.py' Line 188
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                      tf.summary.scalar('transformer/jpeg_quality', jpeg_quality)]
+                              ~~~~~~~~~~~~~~~~~                                            
+    New:                      tf.compat.v1.summary.scalar('transformer/jpeg_quality', jpeg_quality)]
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                            
+
+'models.py' Line 194
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.variable_scope' to 'tf.compat.v1.variable_scope'
+
+    Old:     with tf.variable_scope("acc"):
+                  ~~~~~~~~~~~~~~~~~         
+    New:     with tf.compat.v1.variable_scope("acc"):
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~         
+
+'models.py' Line 196
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.to_int64' to 'tf.compat.v1.to_int64'
+Added keyword 'input' to reordered function 'tf.shape'
+Renamed function 'tf.count_nonzero' to 'tf.compat.v1.count_nonzero'
+
+    Old:         correct_pred = tf.to_int64(tf.shape(secret_pred)[1]) - tf.count_nonzero(secret_pred - secret_true, axis=1)
+                                ~~~~~~~~~~~                             ~~~~~~~~~~~~~~~~                                    
+    New:         correct_pred = tf.compat.v1.to_int64(tf.shape(input=secret_pred)[1]) - tf.compat.v1.count_nonzero(secret_pred - secret_true, axis=1)
+                                ~~~~~~~~~~~~~~~~~~~~~          ~~~~~~                   ~~~~~~~~~~~~~~~~~~~~~~~~~~                                    
+
+'models.py' Line 198
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.count_nonzero' to 'tf.compat.v1.count_nonzero'
+Renamed function 'tf.to_int64' to 'tf.compat.v1.to_int64'
+Added keyword 'input' to reordered function 'tf.shape'
+Added keyword 'input' to reordered function 'tf.size'
+
+    Old:         str_acc = 1.0 - tf.count_nonzero(correct_pred - tf.to_int64(tf.shape(secret_pred)[1])) / tf.size(correct_pred,
+                                 ~~~~~~~~~~~~~~~~                ~~~~~~~~~~~                                                    
+    New:         str_acc = 1.0 - tf.compat.v1.count_nonzero(correct_pred - tf.compat.v1.to_int64(tf.shape(input=secret_pred)[1])) / tf.size(input=correct_pred,
+                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~                ~~~~~~~~~~~~~~~~~~~~~          ~~~~~~                            ~~~~~~              
+
+'models.py' Line 201
+--------------------------------------------------------------------------------
+
+Added keyword 'input_tensor' to reordered function 'tf.reduce_sum'
+Added keyword 'input' to reordered function 'tf.size'
+
+    Old:         bit_acc = tf.reduce_sum(correct_pred) / tf.size(secret_pred, out_type=tf.int64)
+                                                                                                 
+    New:         bit_acc = tf.reduce_sum(input_tensor=correct_pred) / tf.size(input=secret_pred, out_type=tf.int64)
+                                         ~~~~~~~~~~~~~                        ~~~~~~                                
+
+'models.py' Line 228
+--------------------------------------------------------------------------------
+
+WARNING: tf.zeros_like and tf.ones_like no longer have the optimize argument in TF 2.0 or after (also, `tensor' argument is renamed to `input').
+The calls have been converted to compat.v1 for safety (even though  they may already have been correct).
+
+    Old:     mask_warped = tf.contrib.image.transform(tf.ones_like(input_warped), M[:, 1, :], interpolation='BILINEAR')
+                                                      ~~~~~~~~~~~~                                                      
+    New:     mask_warped = tf.contrib.image.transform(tf.ones_like(input_warped), M[:, 1, :], interpolation='BILINEAR')
+                                                      ~~~~~~~~~~~~                                                      
+
+'models.py' Line 245
+--------------------------------------------------------------------------------
+
+WARNING: tf.zeros_like and tf.ones_like no longer have the optimize argument in TF 2.0 or after (also, `tensor' argument is renamed to `input').
+The calls have been converted to compat.v1 for safety (even though  they may already have been correct).
+
+    Old:         mask = tf.contrib.image.transform(tf.ones_like(residual), M[:, 0, :], interpolation='BILINEAR')
+                                                   ~~~~~~~~~~~~                                                  
+    New:         mask = tf.contrib.image.transform(tf.ones_like(residual), M[:, 0, :], interpolation='BILINEAR')
+                                                   ~~~~~~~~~~~~                                                  
+
+'models.py' Line 250
+--------------------------------------------------------------------------------
+
+WARNING: tf.zeros_like and tf.ones_like no longer have the optimize argument in TF 2.0 or after (also, `tensor' argument is renamed to `input').
+The calls have been converted to compat.v1 for safety (even though  they may already have been correct).
+
+    Old:         encoded_image += (1 - mask) * tf.ones_like(residual) * tf.random.uniform([ch])
+                                               ~~~~~~~~~~~~                                     
+    New:         encoded_image += (1 - mask) * tf.ones_like(residual) * tf.random.uniform([ch])
+                                               ~~~~~~~~~~~~                                     
+
+'models.py' Line 252
+--------------------------------------------------------------------------------
+
+WARNING: tf.zeros_like and tf.ones_like no longer have the optimize argument in TF 2.0 or after (also, `tensor' argument is renamed to `input').
+The calls have been converted to compat.v1 for safety (even though  they may already have been correct).
+
+    Old:         mask = tf.contrib.image.transform(tf.ones_like(residual), M[:, 0, :], interpolation='BILINEAR')
+                                                   ~~~~~~~~~~~~                                                  
+    New:         mask = tf.contrib.image.transform(tf.ones_like(residual), M[:, 0, :], interpolation='BILINEAR')
+                                                   ~~~~~~~~~~~~                                                  
+
+'models.py' Line 257
+--------------------------------------------------------------------------------
+
+WARNING: tf.zeros_like and tf.ones_like no longer have the optimize argument in TF 2.0 or after (also, `tensor' argument is renamed to `input').
+The calls have been converted to compat.v1 for safety (even though  they may already have been correct).
+
+    Old:         encoded_image += (1 - mask) * tf.ones_like(residual)
+                                               ~~~~~~~~~~~~           
+    New:         encoded_image += (1 - mask) * tf.ones_like(residual)
+                                               ~~~~~~~~~~~~           
+
+'models.py' Line 259
+--------------------------------------------------------------------------------
+
+WARNING: tf.zeros_like and tf.ones_like no longer have the optimize argument in TF 2.0 or after (also, `tensor' argument is renamed to `input').
+The calls have been converted to compat.v1 for safety (even though  they may already have been correct).
+
+    Old:         mask = tf.contrib.image.transform(tf.ones_like(residual), M[:, 0, :], interpolation='BILINEAR')
+                                                   ~~~~~~~~~~~~                                                  
+    New:         mask = tf.contrib.image.transform(tf.ones_like(residual), M[:, 0, :], interpolation='BILINEAR')
+                                                   ~~~~~~~~~~~~                                                  
+
+'models.py' Line 263
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.manip.roll' to 'tf.roll'
+
+    Old:         encoded_image += (1 - mask) * tf.manip.roll(image_input, shift=1, axis=0)
+                                               ~~~~~~~~~~~~~                               
+    New:         encoded_image += (1 - mask) * tf.roll(image_input, shift=1, axis=0)
+                                               ~~~~~~~                               
+
+'models.py' Line 279
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.losses.sigmoid_cross_entropy' to 'tf.compat.v1.losses.sigmoid_cross_entropy'
+
+    Old:     secret_loss_op = tf.losses.sigmoid_cross_entropy(secret_input, decoded_secret)
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                               
+    New:     secret_loss_op = tf.compat.v1.losses.sigmoid_cross_entropy(secret_input, decoded_secret)
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                               
+
+'models.py' Line 292
+--------------------------------------------------------------------------------
+
+Added keyword 'value' to reordered function 'tf.convert_to_tensor'
+
+    Old:     falloff_im = tf.convert_to_tensor(falloff_im, dtype=tf.float32)
+                                                                             
+    New:     falloff_im = tf.convert_to_tensor(value=falloff_im, dtype=tf.float32)
+                                               ~~~~~~                              
+
+'models.py' Line 300
+--------------------------------------------------------------------------------
+
+Added keyword 'input_tensor' to reordered function 'tf.reduce_mean'
+
+    Old:     yuv_loss_op = tf.reduce_mean(tf.square(im_diff), axis=[0, 1, 2])
+                                                                              
+    New:     yuv_loss_op = tf.reduce_mean(input_tensor=tf.square(im_diff), axis=[0, 1, 2])
+                                          ~~~~~~~~~~~~~                                    
+
+'models.py' Line 310
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.merge' to 'tf.compat.v1.summary.merge'
+
+    Old:     summary_op = tf.summary.merge([
+                          ~~~~~~~~~~~~~~~~   
+    New:     summary_op = tf.compat.v1.summary.merge([
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~   
+
+'models.py' Line 311
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('bit_acc', bit_acc, family='train'),
+                                               ~~~~~~~~~~~~~~~~~                                      
+    New:                                       tf.compat.v1.summary.scalar('bit_acc', bit_acc, family='train'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                      
+
+'models.py' Line 312
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('bit_loss', bit_loss, family='train'),
+                                               ~~~~~~~~~~~~~~~~~                                        
+    New:                                       tf.compat.v1.summary.scalar('bit_loss', bit_loss, family='train'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                        
+
+'models.py' Line 313
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('str_acc', str_acc, family='train'),
+                                               ~~~~~~~~~~~~~~~~~                                      
+    New:                                       tf.compat.v1.summary.scalar('str_acc', str_acc, family='train'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                      
+
+'models.py' Line 314
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('loss', loss_op, family='train'),
+                                               ~~~~~~~~~~~~~~~~~                                   
+    New:                                       tf.compat.v1.summary.scalar('loss', loss_op, family='train'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                   
+
+'models.py' Line 315
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('image_loss', image_loss_op, family='train'),
+                                               ~~~~~~~~~~~~~~~~~                                               
+    New:                                       tf.compat.v1.summary.scalar('image_loss', image_loss_op, family='train'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                               
+
+'models.py' Line 316
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('G_loss', G_loss, family='train'),
+                                               ~~~~~~~~~~~~~~~~~                                    
+    New:                                       tf.compat.v1.summary.scalar('G_loss', G_loss, family='train'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                    
+
+'models.py' Line 317
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('secret_loss', secret_loss_op, family='train'),
+                                               ~~~~~~~~~~~~~~~~~                                                 
+    New:                                       tf.compat.v1.summary.scalar('secret_loss', secret_loss_op, family='train'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                                 
+
+'models.py' Line 318
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('dis_loss', D_loss, family='train'),
+                                               ~~~~~~~~~~~~~~~~~                                      
+    New:                                       tf.compat.v1.summary.scalar('dis_loss', D_loss, family='train'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                      
+
+'models.py' Line 319
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('Y_loss', yuv_loss_op[0], family='color_loss'),
+                                               ~~~~~~~~~~~~~~~~~                                                 
+    New:                                       tf.compat.v1.summary.scalar('Y_loss', yuv_loss_op[0], family='color_loss'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                                 
+
+'models.py' Line 320
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('U_loss', yuv_loss_op[1], family='color_loss'),
+                                               ~~~~~~~~~~~~~~~~~                                                 
+    New:                                       tf.compat.v1.summary.scalar('U_loss', yuv_loss_op[1], family='color_loss'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                                 
+
+'models.py' Line 321
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.scalar' to 'tf.compat.v1.summary.scalar'
+
+    Old:                                       tf.summary.scalar('V_loss', yuv_loss_op[2], family='color_loss'),
+                                               ~~~~~~~~~~~~~~~~~                                                 
+    New:                                       tf.compat.v1.summary.scalar('V_loss', yuv_loss_op[2], family='color_loss'),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                                 
+
+'models.py' Line 324
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.merge' to 'tf.compat.v1.summary.merge'
+
+    Old:     image_summary_op = tf.summary.merge([
+                                ~~~~~~~~~~~~~~~~   
+    New:     image_summary_op = tf.compat.v1.summary.merge([
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~~   
+
+'models.py' Line 340
+--------------------------------------------------------------------------------
+
+Renamed function 'tf.summary.image' to 'tf.compat.v1.summary.image'
+
+    Old:     summary = tf.summary.image(name, image, max_outputs=1, family=family)
+                       ~~~~~~~~~~~~~~~~                                            
+    New:     summary = tf.compat.v1.summary.image(name, image, max_outputs=1, family=family)
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~                                            
+
+

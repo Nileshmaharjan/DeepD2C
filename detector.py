@@ -48,6 +48,8 @@ def main():
     # Initializing network
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
+
+    ConfigProto
     detector_graph = tf.Graph()
     decoder_graph = tf.Graph()
 
