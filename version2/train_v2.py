@@ -8,18 +8,17 @@ import tensorflow as tf
 # import tensorflow.compat.v1 as tf
 tf.compat.v1.disable_v2_behavior()
 import utils_v2
-import models_v2
+from version2 import models_v2
 from os.path import join
 import time
-from datetime import datetime
 
 print('t', tf.VERSION)
 # Specify your training path.
 # Keep your training folder on the :/C drive with no parent folders. Otherwise you might encounter some errors.
 
 TRAIN_PATH = '/train'
-LOGS_Path = "./logs/"
-CHECKPOINTS_PATH = './checkpoints/'
+LOGS_Path = "../logs/"
+CHECKPOINTS_PATH = '../checkpoints/'
 SAVED_MODELS = './saved_models'
 
 if not os.path.exists(CHECKPOINTS_PATH):

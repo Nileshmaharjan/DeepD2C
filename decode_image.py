@@ -11,19 +11,24 @@ from tqdm import tqdm
 import time
 start_time = time.time()
 
+from dotenv import load_dotenv
+import os
+
 BCH_POLYNOMIAL = 137
 BCH_BITS = 7
 
 
-#input_data = np.loadtxt("C:/Research/COdes/DeepD2C/21DEC04/input_bits/binary_input.txt", delimiter=",", dtype=int)
-#print(input_data)
-
 def main():
+    # read env files from environment
+    model_directory = os.getenv('model_directory')
+    encoded_file_directory_path = os.getenv('encoded_file_directory_path')
+    secret_size = os.getenv('secret_size')
+
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str)
+    parser.add_argument('--model', type=str,  default=model_directory)
     parser.add_argument('--image', type=str, default=None)
-    parser.add_argument('--images_dir', type=str, default=None)
+    parser.add_argument('--images_dir', type=str, default=encoded_file_directory_path)
     parser.add_argument('--secret_size', type=int, default=200)
     args = parser.parse_args()
 

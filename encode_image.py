@@ -2,9 +2,7 @@ import bchlib
 import glob
 import os
 from PIL import Image,ImageOps
-import numpy as np
 import tensorflow as tf
-# import tensorflow.contrib.image
 from tensorflow.python.saved_model import tag_constants
 from tensorflow.python.saved_model import signature_constants
 from tqdm import tqdm
@@ -12,20 +10,54 @@ from PIL import Image
 import numpy as np
 import time
 start_time = time.time()
+from dotenv import load_dotenv
+import os
+import datetime
 
 BCH_POLYNOMIAL = 137
 BCH_BITS = 7
 
+
 def main():
+    # read env files from environment
+    root_directory = os.getenv('root_directory')
+    model_directory = os.getenv('model_directory')
+    test_image_directory = os.getenv('test_image_directory')
+    secret_message = os.getenv('secret')
+    secret_size = os.getenv('secret_size')
+
+    # create experiment directory and within it checkerboard, encoded image directory and binary txt file directory
+    date = datetime.datetime.now()
+    experiment_directory_name = date.strftime("%b") + "-" + date.strftime("%d") + "-" + date.strftime("%H") + "-" + date.strftime("%M") + "-" + date.strftime("%S") + "-" + date.strftime("%p")
+
+    experiment_directory_path = root_directory + experiment_directory_name
+    checkerboard_file_directory_name = "/checkerboard-{}".format(int(time.time()))
+    checkerboard_file_directory_path = experiment_directory_path + checkerboard_file_directory_name
+    encoded_file_directory_name = "/encoded-{}".format(int(time.time()))
+    encoded_file_directory_path = experiment_directory_path + encoded_file_directory_name
+    print("Checkerboard file directory path: ", checkerboard_file_directory_path)
+    print("Encoded file directory path: ", encoded_file_directory_path)
+    binary_input_file_name = "binary_input.txt"
+    binary_input_file_path = experiment_directory_path + '/' + binary_input_file_name
+
+
+    if not os.path.exists(experiment_directory_path):
+        os.makedirs(experiment_directory_path)
+        open(binary_input_file_path, 'a').close()
+        if not os.path.exists(checkerboard_file_directory_path):
+            os.makedirs(checkerboard_file_directory_path)
+        if not os.path.exists(encoded_file_directory_path):
+            os.makedirs(encoded_file_directory_path)
+
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str)
+    parser.add_argument('--model', type=str, default=model_directory)
     parser.add_argument('--image', type=str, default=None)
-    parser.add_argument('--images_dir', type=str, default=None)
-    parser.add_argument('--save_dir', type=str, default=None)
-    parser.add_argument('--secret', type=str, default=None)
-    parser.add_argument('--secret_size', type=int, default=20)
-    parser.add_argument('--checkerboard_save_dir', type=str, default=None)
+    parser.add_argument('--images_dir', type=str, default=test_image_directory)
+    parser.add_argument('--save_dir', type=str, default=encoded_file_directory_path)
+    parser.add_argument('--secret', type=str, default=secret_message)
+    parser.add_argument('--secret_size', type=int, default=secret_size)
+    parser.add_argument('--checkerboard_save_dir', type=str, default=checkerboard_file_directory_path)
     args = parser.parse_args()
 
     if args.image is not None:
@@ -70,7 +102,7 @@ def main():
     packet_binary = ''.join(format(x, '08b') for x in packet)
 
     secret = [int(x) for x in packet_binary]
-    np.savetxt('C:/Research/COdes/DeepD2C/21DEC04/input_bits/binary_input.txt', secret, delimiter=', ', fmt='% 4d')
+    np.savetxt(binary_input_file_path, secret, delimiter=', ', fmt='% 4d')
     secret_array = np.array(secret)
     print(f"The secret array shape is {secret_array.shape}")
     reshaped_array = np.reshape(secret_array, (-1, 2))
@@ -96,8 +128,9 @@ def main():
             residual = np.squeeze(residual, axis=0)
             residual = residual[:, :, 0]
             img = Image.fromarray(residual, 'L')
+            print('Counter', counter)
             # Saving checkerboard input image
-            img.save("C:/Research/COdes/DeepD2C/21DEC04/checkerboard_input_images" + f"/{counter}" + "." + "png")
+            img.save(checkerboard_file_directory_path+ f"/{counter}" + "." + "png")
             counter += 1
 
             #hidden_img : data embedded image
