@@ -35,7 +35,7 @@ class StegaStampEncoder(Layer):
         self.conv4 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv5 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv6 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        #self.conv7 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.conv7 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
 
         self.conva = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.convb = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
@@ -45,7 +45,7 @@ class StegaStampEncoder(Layer):
         self.convf = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         #self.convg = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
 
-        self.conv7 = Conv2D(32, 1, activation='relu', padding='same', kernel_initializer='he_normal')
+        # self.conv7 = Conv2D(32, 1, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv8 = Conv2D(16, 1, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv9 = Conv2D(3, 1, padding='same', kernel_initializer='he_normal')
 
