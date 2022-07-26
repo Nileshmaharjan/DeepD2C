@@ -50,6 +50,7 @@ class StegaStampEncoder(Layer):
         self.conv9 = Conv2D(3, 1, padding='same', kernel_initializer='he_normal')
 
 
+
     def call(self, inputs):
         secret, image = inputs
         secret = secret
@@ -84,9 +85,8 @@ class StegaStampEncoder(Layer):
 
         output = concatenate([image, conv8])
         conv9 = self.conv9(output)
+
         return conv9
-
-
 
 class StegaStampDecoder(Layer):
     def __init__(self, height, width):
@@ -108,10 +108,6 @@ class StegaStampDecoder(Layer):
         image = image
         return self.decoder(image)
 
-
-
-
-
 class Discriminator(Layer):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -128,7 +124,6 @@ class Discriminator(Layer):
         x = self.model(x)
         output = tf.reduce_mean(x)
         return output, x
-
 
 def transform_net(encoded_image, args, global_step):
     sh = tf.shape(encoded_image)
@@ -156,11 +151,13 @@ def transform_net(encoded_image, args, global_step):
     f = utils.random_blur_kernel(probs=[.25, .25], N_blur=7,
                                  sigrange_gauss=[1., 3.], sigrange_line=[.25, 1.], wmin_line=3)
     encoded_image = tf.nn.conv2d(encoded_image, f, [1, 1, 1, 1], padding='SAME')
+    image_after_gaussian_blur = tf.reshape(encoded_image, [-1, 256, 256, 3])
 
     # Adding gaussian noise
     noise = tf.random_normal(shape=tf.shape(encoded_image), mean=0.0, stddev=rnd_noise, dtype=tf.float32)
     encoded_image = encoded_image + noise
     encoded_image = tf.clip_by_value(encoded_image, 0, 1)
+    image_after_gaussian_noise = tf.reshape(encoded_image, [-1, 256, 256, 3])
 
     # Color transformation
     contrast_scale = tf.random_uniform(shape=[tf.shape(encoded_image)[0]], minval=contrast_params[0],
@@ -175,6 +172,8 @@ def transform_net(encoded_image, args, global_step):
     encoded_image = (1 - rnd_sat) * encoded_image + rnd_sat * encoded_image_lum
 
     encoded_image = tf.reshape(encoded_image, [-1, 256, 256, 3])
+    image_after_color_transformation = tf.reshape(encoded_image, [-1, 256, 256, 3])
+
     if not args.no_jpeg:
         encoded_image = utils.jpeg_compress_decompress(encoded_image, rounding=utils.round_only_at_0,
                                                        factor=jpeg_factor, downsample_c=True)
@@ -186,8 +185,8 @@ def transform_net(encoded_image, args, global_step):
                      tf.summary.scalar('transformer/contrast_low', contrast_low),
                      tf.summary.scalar('transformer/contrast_high', contrast_high),
                      tf.summary.scalar('transformer/jpeg_quality', jpeg_quality)]
-
-    return encoded_image, summaries
+    print('encoded', encoded_image)
+    return encoded_image, summaries, image_after_gaussian_blur,image_after_gaussian_noise ,image_after_color_transformation
 
 
 def get_secret_acc(secret_true, secret_pred):
@@ -238,7 +237,6 @@ def build_model(encoder,
         #encoded_image = residual
     elif borders == 'black':
         encoded_image = residual_warped + input_warped
-        #encoded_image = residual_warped
         encoded_image = tf.contrib.image.transform(encoded_image, M[:, 0, :], interpolation='BILINEAR')
         input_unwarped = tf.contrib.image.transform(input_warped, M[:, 0, :], interpolation='BILINEAR')
     elif borders.startswith('random'):
@@ -269,9 +267,10 @@ def build_model(encoder,
         D_output_real, _ = discriminator(input_warped)
         D_output_fake, D_heatmap = discriminator(encoded_warped)
 
-    transformed_image, transform_summaries = transform_net(encoded_image, args, global_step)
+    transformed_image, transform_summaries,image_after_gaussian_blur,image_after_gaussian_noise ,image_after_color_transformation = transform_net(encoded_image, args, global_step)
 
     decoded_secret = decoder(transformed_image)
+
 
     bit_acc, str_acc = get_secret_acc(secret_input, decoded_secret)
     bit_loss = 1 - bit_acc
@@ -328,6 +327,9 @@ def build_model(encoder,
         image_to_summary(residual_warped + .5, 'residual', family='encoded'),
         image_to_summary(encoded_image, 'encoded_image', family='encoded'),
         image_to_summary(transformed_image, 'transformed_image', family='transformed'),
+        image_to_summary(image_after_gaussian_blur, 'image_after_gaussian_blur', family='transformed'),
+        image_to_summary(image_after_gaussian_noise, 'image_after_gaussian_noise', family='transformed'),
+        image_to_summary(image_after_color_transformation, 'image_after_color_transformation', family='transformed'),
         image_to_summary(D_heatmap, 'discriminator', family='losses'),
     ])
 

@@ -177,7 +177,7 @@ def main():
     deploy_hide_image_op, residual_op = models.prepare_deployment_hiding_graph(encoder, secret_pl, image_pl)
     deploy_decoder_op = models.prepare_deployment_reveal_graph(decoder, image_pl)
 
-    saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=100, keep_checkpoint_every_n_hours=4)
+    saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=1000, keep_checkpoint_every_n_hours=4)
     sess.run(tf.global_variables_initializer())
 
     if args.pretrained is not None:
@@ -252,9 +252,9 @@ def main():
                 summary, global_step = sess.run([image_summary_op, global_step_tensor], feed_dict)
                 writer.add_summary(summary, global_step)
 
-            if global_step % 100 == 0:
-                save_path = saver.save(sess, join(newCheckPointPath, EXP_NAME + ".chkp"),
-                                       global_step=global_step)
+            # if global_step % 100 == 0:
+                # save_path = saver.save(sess, join(newCheckPointPath, EXP_NAME + ".chkp"),
+                #                        global_step=global_step)
 
     constant_graph_def = tf.graph_util.convert_variables_to_constants(
         sess,
