@@ -59,9 +59,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp_name', type=str)  # experiment name
     parser.add_argument('--secret_size', type=int, default=20)  # secret size
-    parser.add_argument('--num_steps', type=int, default=100000)  # number of steps
+    parser.add_argument('--num_steps', type=int, default=200000)  # number of steps
     parser.add_argument('--batch_size', type=int, default=4)  # batch size
-    parser.add_argument('--lr', type=float, default=.0001)  # learning rate
+    parser.add_argument('--lr', type=float, default=.001)  # learning rate
     parser.add_argument('--l2_loss_scale', type=float, default=1.5)  # L2 regularization params
     parser.add_argument('--l2_loss_ramp', type=int, default=20000)
     parser.add_argument('--l2_edge_gain', type=float, default=10.0)
@@ -101,17 +101,17 @@ def main():
     parser.add_argument('--pretrained', type=str, default=None)
     args = parser.parse_args()
 
-    EXP_NAME = args.exp_name
-    logName = EXP_NAME + "-{}".format(int(time.time()))
-    savedModelName = EXP_NAME + "-{}".format(int(time.time()))
+    experiment_name = args.exp_name
+    log_name = experiment_name + "-{}".format(int(time.time()))
+    saved_model_name = experiment_name + "-{}".format(int(time.time()))
     files_list = glob.glob(join(TRAIN_PATH, "**/*"))
 
     # Create new checkpoint path
-    checkpointName = "{}".format(int(time.time()))
-    newCheckPointPath = CHECKPOINTS_PATH + checkpointName
+    check_point_name = "{}".format(int(time.time()))
+    new_check_point_path = CHECKPOINTS_PATH + check_point_name
 
-    if not os.path.exists(newCheckPointPath):
-        os.makedirs(newCheckPointPath)
+    if not os.path.exists(new_check_point_path):
+        os.makedirs(new_check_point_path)
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
@@ -183,13 +183,10 @@ def main():
     if args.pretrained is not None:
         saver.restore(sess, args.pretrained)
 
-    writer = tf.summary.FileWriter(join(LOGS_Path, logName), sess.graph)
+    writer = tf.summary.FileWriter(join(LOGS_Path, log_name), sess.graph)
 
     total_steps = len(files_list) // args.batch_size + 1
     global_step = 0
-
-    print(total_steps);
-    print(global_step);
 
     while global_step < args.num_steps:
         for _ in range(min(total_steps, args.num_steps - global_step)):
@@ -263,12 +260,12 @@ def main():
     with tf.Session(graph=tf.Graph()) as session:
         tf.import_graph_def(constant_graph_def, name='')
         tf.saved_model.simple_save(session,
-                                   SAVED_MODELS + '/' + savedModelName,
+                                   SAVED_MODELS + '/' + saved_model_name,
                                    inputs={'secret': secret_pl, 'image': image_pl},
                                    outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
                                             'decoded': deploy_decoder_op})
         # tf.saved_model.loader.load(
-        #     session, [tf.saved_model.tag_constants.SERVING], SAVED_MODELS + '/' + EXP_NAME)
+        #     session, [tf.saved_model.tag_constants.SERVING], SAVED_MODELS + '/' + experiment_name)
 
     writer.close()
 
