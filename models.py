@@ -1,19 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jul  2 20:08:44 2020
-
-@author: Lakpa
-"""
-
-
-
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jun  8 14:25:52 2020
-
-@author: Lakpa
-"""
-
 import numpy as np
 import os
 import tensorflow as tf
@@ -80,10 +64,11 @@ class StegaStampEncoder(Layer):
         conv6_b = self.conv6(hyb_conv5)
         hyb_conv6 = concatenate([conv6_a, conv6_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
-        conv8 = self.conv8(conv7)
+        output = concatenate([image, conv7])
+        conv8 = self.conv8(output)
 
-        output = concatenate([image, conv8])
-        conv9 = self.conv9(output)
+        # output = concatenate([image, conv8])
+        conv9 = self.conv9(conv8)
         return conv9
 
 
