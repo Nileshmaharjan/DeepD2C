@@ -1,6 +1,5 @@
 import bchlib
 import glob
-import os
 from PIL import Image,ImageOps
 import tensorflow as tf
 from tensorflow.python.saved_model import tag_constants
@@ -10,7 +9,6 @@ from PIL import Image
 import numpy as np
 import time
 start_time = time.time()
-from dotenv import load_dotenv
 import os
 import datetime
 
