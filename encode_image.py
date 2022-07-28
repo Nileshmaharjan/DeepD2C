@@ -11,6 +11,7 @@ import time
 start_time = time.time()
 import os
 import datetime
+from calculations import psnr
 
 BCH_POLYNOMIAL = 137
 BCH_BITS = 7
@@ -33,10 +34,13 @@ def main():
     checkerboard_file_directory_path = experiment_directory_path + checkerboard_file_directory_name
     encoded_file_directory_name = "/encoded-{}".format(int(time.time()))
     encoded_file_directory_path = experiment_directory_path + encoded_file_directory_name
+    print("YOU NEED TO CHANGE CHECKERBOARD PATH AND ENCODED FILE PATH AFTER RUNNING ENCODE.PY")
     print("Checkerboard file directory path: ", checkerboard_file_directory_path)
     print("Encoded file directory path: ", encoded_file_directory_path)
     binary_input_file_name = "binary_input.txt"
     binary_input_file_path = experiment_directory_path + '/' + binary_input_file_name
+    psnr_file_name = "psnr.txt"
+    psnr_file_path = experiment_directory_path + '/' + psnr_file_name
 
 
     if not os.path.exists(experiment_directory_path):
@@ -100,7 +104,7 @@ def main():
     packet_binary = ''.join(format(x, '08b') for x in packet)
 
     secret = [int(x) for x in packet_binary]
-    np.savetxt(binary_input_file_path, secret, delimiter=', ', fmt='% 4d')
+    np.savetxt(binary_input_file_path, secret, fmt='% 4d', delimiter=' ')
     secret_array = np.array(secret)
     print(f"The secret array shape is {secret_array.shape}")
     reshaped_array = np.reshape(secret_array, (-1, 2))
@@ -113,6 +117,8 @@ def main():
             os.makedirs(args.save_dir)
         size = (width, height)
         counter = 1
+        index = 1 # used in psnr calculation for providing test image name
+        psnr_values = []
         for filename in tqdm(files_list):
             image = Image.open(filename).convert("RGB")
             image = np.array(ImageOps.fit(image,size),dtype=np.float32)
@@ -122,11 +128,12 @@ def main():
                          input_image:[image]}
 
             hidden_img, residual = sess.run([output_stegastamp, output_residual],feed_dict=feed_dict)
+
             #residual : data checkerboard image
             residual = np.squeeze(residual, axis=0)
             residual = residual[:, :, 0]
             img = Image.fromarray(residual, 'L')
-            print('Counter', counter)
+
             # Saving checkerboard input image
             img.save(checkerboard_file_directory_path+ f"/{counter}" + "." + "png")
             counter += 1
@@ -144,7 +151,19 @@ def main():
             save_name = filename.split('\\')[-1].split('.')[0]
 
             im = Image.fromarray(np.array(rescaled))
-            im.save(args.save_dir + '/'+save_name+'_encoded_.png')
+            encoded_image_path = args.save_dir + '/'+save_name+'_encoded_.png';
+            im.save(encoded_image_path)
+
+            input_image_path = test_image_directory + '/' + str(index)+'.jpg'
+            index = index + 1
+
+            psnr_value = psnr.calculate_psnr(input_image_path, encoded_image_path)
+            psnr_values.append(psnr_value)
+
+        # only calculate this value if images are provided and not a single image
+        avg_psnr = sum(psnr_values)/len(files_list)
+        f = open(psnr_file_path, "w+")
+        f.write(f"The average psnr value from {index - 1} images is: {avg_psnr} ")
 
 
 if __name__ == "__main__":

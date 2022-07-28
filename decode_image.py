@@ -23,6 +23,11 @@ def main():
     model_directory = os.getenv('model_directory')
     encoded_file_directory_path = os.getenv('encoded_file_directory_path')
     secret_size = os.getenv('secret_size')
+    binary_file_path = os.getenv('binary_file_directory_path')
+    experiment_directory_path = os.getenv('experiment_directory_path')
+    ber_file_name = "ber.txt"
+    ber_file_path = experiment_directory_path + '/' + ber_file_name
+
 
     import argparse
     parser = argparse.ArgumentParser()
@@ -40,6 +45,9 @@ def main():
         print('Missing input image')
         return
 
+    binary_input = np.loadtxt(binary_file_path)
+    input_data = np.asarray(binary_input, dtype=int).tolist()
+
     sess = tf.InteractiveSession(graph=tf.Graph())
 
     model = tf.saved_model.loader.load(sess, [tag_constants.SERVING], args.model)
@@ -53,6 +61,7 @@ def main():
     bch = bchlib.BCH(BCH_POLYNOMIAL, BCH_BITS)
 
     ber_list = []
+    index = 1  # used in ber calculation
     for i, filename in enumerate(tqdm(files_list)):
         image = Image.open(filename).convert("RGB")
         image = np.array(ImageOps.fit(image,(256, 256)),dtype=np.float32)
@@ -69,29 +78,26 @@ def main():
 
         data, ecc = packet[:-bch.ecc_bytes], packet[-bch.ecc_bytes:]
 
-        # bitflips = bch.decode_inplace(data, ecc)
-        #er = np.logical_xor(input_data, decoded_data)
-        #er = np.count_nonzero(er)
-        #ber = er/len(input_data)
-        #ber_list.append(ber)
+        decoded = np.asarray(decoded_data, dtype=int).tolist()
 
-        print('\nDecoded bits :', np.asarray(decoded_data, dtype=int).tolist())
-        #print('Input bits   :', np.asarray(input_data, dtype=int).tolist())
+        err = 0
+        n = 200
+        for i in range(n):
+            print(i)
+            if input_data[i] == decoded[i]:
+                err = err + 0
+            else:
+                err = err + 1
+        ber = err/n
+        ber_list.append(ber)
+        index = index + 1
+        print('Total error', err)
 
-        #print(f'{i+1}_Bit Error Rate : {ber}')
-
-
-        # if bitflips != -1:
-        #     try:
-        #         code = data.decode("utf-8")
-        #         print(filename, code)
-        #         continue
-        #     except:
-        #         continue
-        # print(filename, 'Failed to decode')
+    avg_ber = sum(ber_list) / index
+    f = open(ber_file_path, "w+")
+    f.write(f"The average ber value from {index - 1} images is: {avg_ber} ")
 
     print('-------Finished-------')
-    #print(f'BER Average : {np.mean(ber_list)}')
 
 if __name__ == "__main__":
     main()
