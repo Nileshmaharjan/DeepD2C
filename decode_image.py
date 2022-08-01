@@ -83,7 +83,6 @@ def main():
         err = 0
         n = 200
         for i in range(n):
-            print(i)
             if input_data[i] == decoded[i]:
                 err = err + 0
             else:
