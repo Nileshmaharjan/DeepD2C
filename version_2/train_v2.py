@@ -6,7 +6,7 @@ import random
 import tensorflow as tf
 
 # import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+tf.compat.v1.disable_v2_behavior()
 import utils
 import models
 from os.path import join
@@ -96,7 +96,7 @@ def main(batch, rate, steps):
     parser.add_argument('--pretrained', type=str, default=None)
     args = parser.parse_args()
 
-    files_list = glob.glob(join(os.getenv('TRAIN_PATH'), "data_augmented/*"))
+    files_list = glob.glob(join(os.getenv('TRAIN_PATH'), "**/*"))
 
     experiment_name, log_name, saved_model_name, check_point_name = naming_convention(args.exp_name, rate,
                                                                                       batch, steps)
@@ -109,9 +109,9 @@ def main(batch, rate, steps):
     if not os.path.exists(new_check_point_path):
         os.makedirs(new_check_point_path)
 
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
-    sess = tf.Session(config=config)
+    sess = tf.compat.v1.Session(config=config)
 
     height = 256
     width = 256
@@ -119,18 +119,18 @@ def main(batch, rate, steps):
     # placeholder variable help assign data to later date.
     # allows creating operations and building computational graph without needing data
 
-    secret_pl = tf.placeholder(shape=[None, args.secret_size], dtype=tf.float32, name="input_prep")
-    image_pl = tf.placeholder(shape=[None, height, width, 3], dtype=tf.float32, name="input_hide")
-    M_pl = tf.placeholder(shape=[None, 2, 8], dtype=tf.float32, name="input_transform")
+    secret_pl = tf.compat.v1.placeholder(shape=[None, args.secret_size], dtype=tf.float32, name="input_prep")
+    image_pl = tf.compat.v1.placeholder(shape=[None, height, width, 3], dtype=tf.float32, name="input_hide")
+    M_pl = tf.compat.v1.placeholder(shape=[None, 2, 8], dtype=tf.float32, name="input_transform")
 
     # tf variable represents tensor whose value can be changed running ops on it.
     global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
 
-    loss_scales_pl = tf.placeholder(shape=[4], dtype=tf.float32, name="input_loss_scales")
-    l2_edge_gain_pl = tf.placeholder(shape=[1], dtype=tf.float32, name="input_edge_gain")
-    yuv_scales_pl = tf.placeholder(shape=[3], dtype=tf.float32, name="input_yuv_scales")
+    loss_scales_pl = tf.compat.v1.placeholder(shape=[4], dtype=tf.float32, name="input_loss_scales")
+    l2_edge_gain_pl = tf.compat.v1.placeholder(shape=[1], dtype=tf.float32, name="input_edge_gain")
+    yuv_scales_pl = tf.compat.v1.placeholder(shape=[3], dtype=tf.float32, name="input_yuv_scales")
 
-    log_decode_mod_pl = tf.placeholder(shape=[], dtype=tf.float32, name="input_log_decode_mod")
+    log_decode_mod_pl = tf.compat.v1.placeholder(shape=[], dtype=tf.float32, name="input_log_decode_mod")
 
     # Your model is created here
     encoder = models.D2CEncoder(height=height, width=width)
@@ -166,18 +166,18 @@ def main(batch, rate, steps):
         args=args,
         global_step=global_step_tensor)
 
-    tvars = tf.trainable_variables()  # returns all variables created(the two variable scopes) and makes trainable true
+    tvars = tf.compat.v1.trainable_variables()  # returns all variables created(the two variable scopes) and makes trainable true
 
     d_vars = [var for var in tvars if 'discriminator' in var.name]
     g_vars = [var for var in tvars if 'd2c' in var.name]
 
     clip_D = [p.assign(tf.clip_by_value(p, -0.01, 0.01)) for p in d_vars]
 
-    train_op = tf.train.AdamOptimizer(learning_rate_final).minimize(loss_op, var_list=g_vars,
+    train_op = tf.compat.v1.train.AdamOptimizer(learning_rate_final).minimize(loss_op, var_list=g_vars,
                                                                     global_step=global_step_tensor)
-    train_secret_op = tf.train.AdamOptimizer(learning_rate_final).minimize(secret_loss_op, var_list=g_vars,
+    train_secret_op = tf.compat.v1.train.AdamOptimizer(learning_rate_final).minimize(secret_loss_op, var_list=g_vars,
                                                                            global_step=global_step_tensor)
-    optimizer = tf.train.RMSPropOptimizer(.00001)
+    optimizer = tf.compat.v1.train.RMSPropOptimizer(.00001)
     gvs = optimizer.compute_gradients(D_loss_op, var_list=d_vars)
     capped_gvs = [(tf.clip_by_value(grad, -.25, .25), var) for grad, var in gvs]
     train_dis_op = optimizer.apply_gradients(capped_gvs)
@@ -185,8 +185,8 @@ def main(batch, rate, steps):
     deploy_hide_image_op, residual_op = models.prepare_deployment_hiding_graph(encoder, secret_pl, image_pl)
     deploy_decoder_op = models.prepare_deployment_reveal_graph(decoder, image_pl)
 
-    saver = tf.train.Saver(tf.trainable_variables(), max_to_keep=1000, keep_checkpoint_every_n_hours=4)
-    sess.run(tf.global_variables_initializer())
+    saver = tf.compat.v1.train.Saver(tf.compat.v1.trainable_variables(), max_to_keep=1000, keep_checkpoint_every_n_hours=4)
+    sess.run(tf.compat.v1.global_variables_initializer())
 
     if args.pretrained is not None:
         saver.restore(sess, args.pretrained)
@@ -264,13 +264,13 @@ def main(batch, rate, steps):
             # save_path = saver.save(sess, join(newCheckPointPath, EXP_NAME + ".chkp"),
             #                        global_step=global_step)
 
-    constant_graph_def = tf.graph_util.convert_variables_to_constants(
+    constant_graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
         sess,
         sess.graph.as_graph_def(),
         [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
-    with tf.Session(graph=tf.Graph()) as session:
+    with tf.compat.v1.Session(graph=tf.Graph()) as session:
         tf.import_graph_def(constant_graph_def, name='')
-        tf.saved_model.simple_save(session,
+        tf.compat.v1.saved_model.simple_save(session,
                                    os.getenv('SAVED_MODELS') + '/' + saved_model_name,
                                    inputs={'secret': secret_pl, 'image': image_pl},
                                    outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,

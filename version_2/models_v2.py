@@ -52,15 +52,15 @@ class D2CEncoder(Layer):
         conv1_b = self.conv1(image)
         hyb_conv1 = concatenate([conv1_a, conv1_b], axis=3)
         conv2_b = self.conv2(hyb_conv1)
-        hyb_conv2 = concatenate([conv2_a, conv2_b, conv1_b], axis=3)
+        hyb_conv2 = concatenate([conv2_a, conv2_b], axis=3)
         conv3_b = self.conv3(hyb_conv2)
-        hyb_conv3 = concatenate([conv3_a, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv3 = concatenate([conv3_a, conv3_b], axis=3)
         conv4_b = self.conv4(hyb_conv3)
-        hyb_conv4 = concatenate([conv4_a, conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv4 = concatenate([conv4_a, conv4_b], axis=3)
         conv5_b = self.conv5(hyb_conv4)
-        hyb_conv5 = concatenate([conv5_a, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv5 = concatenate([conv5_a, conv5_b], axis=3)
         conv6_b = self.conv6(hyb_conv5)
-        hyb_conv6 = concatenate([conv6_a, conv6_b, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv6 = concatenate([conv6_a, conv6_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
         output = concatenate([image, conv7])
         conv8 = self.conv8(output)
@@ -104,7 +104,7 @@ class Discriminator(Layer):
     def call(self, image):
         x = image
         x = self.model(x)
-        output = tf.reduce_mean(x)
+        output = tf.reduce_mean(input_tensor=x)
         return output, x
 
 
@@ -159,7 +159,7 @@ class BuildModel:
             mask = tf.contrib.image.transform(tf.ones_like(residual), M[:, 0, :], interpolation='BILINEAR')
             encoded_image = residual_warped + input_warped
             encoded_image = tf.contrib.image.transform(encoded_image, M[:, 0, :], interpolation='BILINEAR')
-            encoded_image += (1 - mask) * tf.manip.roll(image_input, shift=1, axis=0)
+            encoded_image += (1 - mask) * tf.roll(image_input, shift=1, axis=0)
         if borders == 'no_edge':
             D_output_real, _ = discriminator(image_input)
             D_output_fake, D_heatmap = discriminator(encoded_image)
@@ -179,7 +179,7 @@ class BuildModel:
         bit_acc, str_acc = getsecretaccuracy(secret_input, decoded_secret)
         bit_loss = 1 - bit_acc
 
-        secret_loss_op = tf.losses.sigmoid_cross_entropy(secret_input, decoded_secret)
+        secret_loss_op = tf.compat.v1.losses.sigmoid_cross_entropy(secret_input, decoded_secret)
 
         size = (int(image_input.shape[1]), int(image_input.shape[2]))
         gain = 10
@@ -192,7 +192,7 @@ class BuildModel:
             falloff_im[:, -j] *= (np.cos(4 * np.pi * j / size[0] + np.pi) + 1) / 2
             falloff_im[:, j] *= (np.cos(4 * np.pi * j / size[0] + np.pi) + 1) / 2
         falloff_im = 1 - falloff_im
-        falloff_im = tf.convert_to_tensor(falloff_im, dtype=tf.float32)
+        falloff_im = tf.convert_to_tensor(value=falloff_im, dtype=tf.float32)
         falloff_im *= l2_edge_gain
 
         # convert image from RGB to YUV format (better format to store color information of the image)
@@ -200,7 +200,7 @@ class BuildModel:
         image_input_yuv = tf.image.rgb_to_yuv(image_input)
         im_diff = encoded_image_yuv - image_input_yuv
         im_diff += im_diff * tf.expand_dims(falloff_im, axis=[-1])
-        yuv_loss_op = tf.reduce_mean(tf.square(im_diff), axis=[0, 1, 2])
+        yuv_loss_op = tf.reduce_mean(input_tensor=tf.square(im_diff), axis=[0, 1, 2])
         image_loss_op = tf.tensordot(yuv_loss_op, yuv_scales, axes=1)
 
         D_loss = D_output_real - D_output_fake
@@ -210,18 +210,18 @@ class BuildModel:
         if not args.no_gan:
             loss_op += loss_scales[3] * G_loss
 
-        summary_op = tf.summary.merge([
-                                          tf.summary.scalar('bit_acc', bit_acc, family='train'),
-                                          tf.summary.scalar('bit_loss', bit_loss, family='train'),
-                                          tf.summary.scalar('str_acc', str_acc, family='train'),
-                                          tf.summary.scalar('loss', loss_op, family='train'),
-                                          tf.summary.scalar('image_loss', image_loss_op, family='train'),
-                                          tf.summary.scalar('G_loss', G_loss, family='train'),
-                                          tf.summary.scalar('secret_loss', secret_loss_op, family='train'),
-                                          tf.summary.scalar('dis_loss', D_loss, family='train'),
-                                          tf.summary.scalar('Y_loss', yuv_loss_op[0], family='color_loss'),
-                                          tf.summary.scalar('U_loss', yuv_loss_op[1], family='color_loss'),
-                                          tf.summary.scalar('V_loss', yuv_loss_op[2], family='color_loss'),
+        summary_op = tf.compat.v1.summary.merge([
+                                          tf.compat.v1.summary.scalar('bit_acc', bit_acc, family='train'),
+                                          tf.compat.v1.summary.scalar('bit_loss', bit_loss, family='train'),
+                                          tf.compat.v1.summary.scalar('str_acc', str_acc, family='train'),
+                                          tf.compat.v1.summary.scalar('loss', loss_op, family='train'),
+                                          tf.compat.v1.summary.scalar('image_loss', image_loss_op, family='train'),
+                                          tf.compat.v1.summary.scalar('G_loss', G_loss, family='train'),
+                                          tf.compat.v1.summary.scalar('secret_loss', secret_loss_op, family='train'),
+                                          tf.compat.v1.summary.scalar('dis_loss', D_loss, family='train'),
+                                          tf.compat.v1.summary.scalar('Y_loss', yuv_loss_op[0], family='color_loss'),
+                                          tf.compat.v1.summary.scalar('U_loss', yuv_loss_op[1], family='color_loss'),
+                                          tf.compat.v1.summary.scalar('V_loss', yuv_loss_op[2], family='color_loss'),
                                       ] + transform_summaries)
 
         image_input_summary = models.ImageToSummary(image_input, 'image_input', family='input')
@@ -236,7 +236,7 @@ class BuildModel:
         D_heatmap_summary = models.ImageToSummary(D_heatmap, 'discriminator', family='transformed')
 
 
-        image_summary_op = tf.summary.merge([
+        image_summary_op = tf.compat.v1.summary.merge([
             image_input_summary(image_input, 'image_input', family='input'),
             input_warped_summary(input_warped, 'input_warped', family='input'),
             encoded_warped_summary(encoded_warped, 'encoded_warped', family='encoded'),
@@ -259,9 +259,9 @@ class TransformNet:
         self.global_step = global_step
 
     def __call__(self, encoded_image, args, global_step):
-        sh = tf.shape(encoded_image)
+        sh = tf.shape(input=encoded_image)
 
-        ramp_fn = lambda ramp: tf.minimum(tf.to_float(global_step) / ramp, 1.)
+        ramp_fn = lambda ramp: tf.minimum(tf.compat.v1.to_float(global_step) / ramp, 1.)
 
         rnd_bri = ramp_fn(args.rnd_bri_ramp) * args.rnd_bri
         rnd_hue = ramp_fn(args.rnd_hue_ramp) * args.rnd_hue
@@ -287,21 +287,21 @@ class TransformNet:
         image_after_gaussian_blur = tf.reshape(encoded_image, [-1, 256, 256, 3])
 
         # Adding gaussian noise
-        noise = tf.random_normal(shape=tf.shape(encoded_image), mean=0.0, stddev=rnd_noise, dtype=tf.float32)
+        noise = tf.random.normal(shape=tf.shape(input=encoded_image), mean=0.0, stddev=rnd_noise, dtype=tf.float32)
         encoded_image = encoded_image + noise
         encoded_image = tf.clip_by_value(encoded_image, 0, 1)
         image_after_gaussian_noise = tf.reshape(encoded_image, [-1, 256, 256, 3])
 
         # Color transformation
-        contrast_scale = tf.random_uniform(shape=[tf.shape(encoded_image)[0]], minval=contrast_params[0],
+        contrast_scale = tf.random.uniform(shape=[tf.shape(input=encoded_image)[0]], minval=contrast_params[0],
                                            maxval=contrast_params[1])
-        contrast_scale = tf.reshape(contrast_scale, shape=[tf.shape(encoded_image)[0], 1, 1, 1])
+        contrast_scale = tf.reshape(contrast_scale, shape=[tf.shape(input=encoded_image)[0], 1, 1, 1])
 
         encoded_image = encoded_image * contrast_scale
         encoded_image = encoded_image + rnd_brightness
         encoded_image = tf.clip_by_value(encoded_image, 0, 1)
 
-        encoded_image_lum = tf.expand_dims(tf.reduce_sum(encoded_image * tf.constant([.3, .6, .1]), axis=3), 3)
+        encoded_image_lum = tf.expand_dims(tf.reduce_sum(input_tensor=encoded_image * tf.constant([.3, .6, .1]), axis=3), 3)
         encoded_image = (1 - rnd_sat) * encoded_image + rnd_sat * encoded_image_lum
 
         encoded_image = tf.reshape(encoded_image, [-1, 256, 256, 3])
@@ -311,13 +311,13 @@ class TransformNet:
             encoded_image = utils.jpeg_compress_decompress(encoded_image, rounding=utils.round_only_at_0,
                                                            factor=jpeg_factor, downsample_c=True)
 
-            summaries = [tf.summary.scalar('transformer/rnd_bri', rnd_bri),
+            summaries = [tf.compat.v1.summary.scalar('transformer/rnd_bri', rnd_bri),
                          # writing values of scalar tensor that changes over time or iterations
-                         tf.summary.scalar('transformer/rnd_hue', rnd_hue),
-                         tf.summary.scalar('transformer/rnd_noise', rnd_noise),
-                         tf.summary.scalar('transformer/contrast_low', contrast_low),
-                         tf.summary.scalar('transformer/contrast_high', contrast_high),
-                         tf.summary.scalar('transformer/jpeg_quality', jpeg_quality)]
+                         tf.compat.v1.summary.scalar('transformer/rnd_hue', rnd_hue),
+                         tf.compat.v1.summary.scalar('transformer/rnd_noise', rnd_noise),
+                         tf.compat.v1.summary.scalar('transformer/contrast_low', contrast_low),
+                         tf.compat.v1.summary.scalar('transformer/contrast_high', contrast_high),
+                         tf.compat.v1.summary.scalar('transformer/jpeg_quality', jpeg_quality)]
         return encoded_image, summaries, image_after_gaussian_blur, image_after_gaussian_noise, image_after_color_transformation
 
 
@@ -327,15 +327,15 @@ class GetSecretAccuracy:
         self.secret_pred = secret_pred
 
     def __call__(self, secret_true, secret_pred):
-        with tf.variable_scope("acc"):
+        with tf.compat.v1.variable_scope("acc"):
             secret_pred = tf.round(tf.sigmoid(secret_pred))
-            correct_pred = tf.to_int64(tf.shape(secret_pred)[1]) - tf.count_nonzero(secret_pred - secret_true, axis=1)
+            correct_pred = tf.compat.v1.to_int64(tf.shape(input=secret_pred)[1]) - tf.compat.v1.count_nonzero(secret_pred - secret_true, axis=1)
 
-            str_acc = 1.0 - tf.count_nonzero(correct_pred - tf.to_int64(tf.shape(secret_pred)[1])) / tf.size(
-                correct_pred,
+            str_acc = 1.0 - tf.compat.v1.count_nonzero(correct_pred - tf.compat.v1.to_int64(tf.shape(input=secret_pred)[1])) / tf.size(
+                input=correct_pred,
                 out_type=tf.int64)
 
-            bit_acc = tf.reduce_sum(correct_pred) / tf.size(secret_pred, out_type=tf.int64)
+            bit_acc = tf.reduce_sum(input_tensor=correct_pred) / tf.size(input=secret_pred, out_type=tf.int64)
             return bit_acc, str_acc
 
 
@@ -348,7 +348,7 @@ class ImageToSummary():
     def __call__(self, image, name, family="train"):
         image = tf.clip_by_value(image, 0, 1)
         image = tf.cast(image * 255, dtype=tf.uint8)
-        summary = tf.summary.image(name, image, max_outputs=1, family=family)
+        summary = tf.compat.v1.summary.image(name, image, max_outputs=1, family=family)
         return summary
 
 
