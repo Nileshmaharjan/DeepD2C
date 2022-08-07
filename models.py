@@ -62,6 +62,7 @@ class D2CEncoder(Layer):
         conv6_b = self.conv6(hyb_conv5)
         hyb_conv6 = concatenate([conv6_a, conv6_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
+        image = tf.image.grayscale_to_rgb(image)
         output = concatenate([image, conv7])
         conv8 = self.conv8(output)
         # output = concatenate([image, conv8])
@@ -129,12 +130,14 @@ class BuildModel:
                  M, loss_scales, yuv_scales, args, global_step):
         print(M[:, 1, :], "projective_transform_matrix")
 
+        image_input = tf.image.rgb_to_grayscale(image_input)
         input_warped = tf.contrib.image.transform(image_input, M[:, 1, :], interpolation='BILINEAR')
 
         mask_warped = tf.contrib.image.transform(tf.ones_like(input_warped), M[:, 1, :], interpolation='BILINEAR')
         input_warped += (1 - mask_warped) * image_input
 
         residual_warped = encoder((secret_input, input_warped))
+        # residual_warped = tf.image.grayscale_to_rgb(residual_warped)
         encoded_warped = residual_warped + input_warped
         # encoded_warped = residual_warped
         residual = tf.contrib.image.transform(residual_warped, M[:, 0, :], interpolation='BILINEAR')
