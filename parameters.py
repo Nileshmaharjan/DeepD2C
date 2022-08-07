@@ -4,8 +4,8 @@ import datetime
 # define batch size, learning rate and number of steps here for this project
 def basic_parameters():
     batch_size = numpy.array([4])
-    learning_rate = numpy.array([0.0001, 0.0050, 0.001])
-    number_of_steps = [100000]
+    learning_rate = numpy.array([0.0001])
+    number_of_steps = [10, 60000, 200000]
     return learning_rate, batch_size, number_of_steps
 
 

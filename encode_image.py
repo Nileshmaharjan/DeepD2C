@@ -14,7 +14,7 @@ import datetime
 from calculations import psnr
 
 BCH_POLYNOMIAL = 137
-BCH_BITS = 7
+BCH_BITS = 15
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
     experiment_directory_path = root_directory + experiment_directory_name
     checkerboard_file_directory_name = "/checkerboard-{}".format(int(time.time()))
     checkerboard_file_directory_path = experiment_directory_path + checkerboard_file_directory_name
-    encoded_file_directory_name = "/encoded-{}".format(int(time.time()))
+    encoded_file_directory_name = "/encoded"
     encoded_file_directory_path = experiment_directory_path + encoded_file_directory_name
     print("YOU NEED TO CHANGE CHECKERBOARD PATH AND ENCODED FILE PATH AFTER RUNNING ENCODE.PY")
     print("Checkerboard file directory path: ", checkerboard_file_directory_path)
@@ -158,12 +158,13 @@ def main():
             index = index + 1
 
             psnr_value = psnr.calculate_psnr(input_image_path, encoded_image_path)
+            print('psnr_value', psnr_value)
             psnr_values.append(psnr_value)
 
         # only calculate this value if images are provided and not a single image
-        avg_psnr = sum(psnr_values)/len(files_list)
+        max_psnr = np.max(psnr_values)
         f = open(psnr_file_path, "w+")
-        f.write(f"The average psnr value from {index - 1} images is: {avg_psnr} ")
+        f.write(f"The highest psnr value from {index - 1} images is: {max_psnr} ")
 
 
 if __name__ == "__main__":

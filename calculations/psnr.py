@@ -26,8 +26,8 @@ def psnr(original, compressed):
 
 
 def main():
-    original = cv2.imread("C:/DL lecture slides/DeepD2C/images_test/4.jpg")
-    compressed = cv2.imread("C:/DL lecture slides/DeepD2C/experiments/Jul-25-12-39-53-PM/encoded-1658720393/4_encoded_.png", 1)
+    original = cv2.imread("C:/DL lecture slides/DeepD2C/psnr_test_images/4.jpg")
+    compressed = cv2.imread("C:/DL lecture slides/DeepD2C/experiments/Aug-07-15-31-27-PM/encoded/4_encoded_.png", 1)
     value = psnr(original, compressed)
     print(f"PSNR value is {value} dB")
 
