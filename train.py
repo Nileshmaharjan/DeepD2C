@@ -135,6 +135,7 @@ def main(batch, rate, steps):
     # Your model is created here
     encoder = models.D2CEncoder(height=height, width=width)
     decoder = models.D2CDecoder(height=height, width=width)
+
     discriminator = models.Discriminator()
 
     buildmodel = models.BuildModel(encoder=encoder,
