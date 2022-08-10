@@ -43,10 +43,10 @@ class D2CEncoder(Layer):
 
         conv1_a = self.conva(secret_enlarged)
         conv2_a = self.convb(conv1_a)
-        conv3_a = self.convc(conv2_a)
-        conv4_a = self.convd(conv3_a)
-        conv5_a = self.conve(conv4_a)
-        conv6_a = self.convf(conv5_a)
+        conv3_a = self.convc(conv2_a + conv1_a)
+        conv4_a = self.convd(conv3_a + conv2_a + conv1_a)
+        conv5_a = self.conve(conv4_a + conv3_a + conv2_a + conv1_a)
+        conv6_a = self.convf(conv5_a + conv4_a + conv3_a + conv2_a + conv1_a)
         # conv7_a = self.convg(conv6_a)
 
         conv1_b = self.conv1(image)
