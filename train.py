@@ -182,6 +182,10 @@ def main(batch, rate, steps):
     capped_gvs = [(tf.clip_by_value(grad, -.25, .25), var) for grad, var in gvs]
     train_dis_op = optimizer.apply_gradients(capped_gvs)
 
+    print(encoder)
+    print(secret_pl)
+    print(image_pl)
+    print('test')
     deploy_hide_image_op, residual_op = models.prepare_deployment_hiding_graph(encoder, secret_pl, image_pl)
     deploy_decoder_op = models.prepare_deployment_reveal_graph(decoder, image_pl)
 

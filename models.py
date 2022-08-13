@@ -36,6 +36,7 @@ class D2CEncoder(Layer):
         secret, image = inputs
         secret = secret
         image = image
+        image = tf.image.rgb_to_grayscale(image)
 
         secret = self.secret_dense(secret)
         secret = Reshape((64, 64, 1))(secret)
@@ -62,8 +63,8 @@ class D2CEncoder(Layer):
         conv6_b = self.conv6(hyb_conv5)
         hyb_conv6 = concatenate([conv6_a, conv6_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
-        image = tf.image.grayscale_to_rgb(image)
-        output = concatenate([image, conv7])
+        a = tf.image.grayscale_to_rgb(image)
+        output = concatenate([a, conv7])
         conv8 = self.conv8(output)
         # output = concatenate([image, conv8])
         conv9 = self.conv9(conv8)
@@ -129,8 +130,8 @@ class BuildModel:
     def __call__(self, encoder, decoder, discriminator, secret_input, image_input, l2_edge_gain, borders, secret_size,
                  M, loss_scales, yuv_scales, args, global_step):
         print(M[:, 1, :], "projective_transform_matrix")
-
-        image_input = tf.image.rgb_to_grayscale(image_input)
+        # a = image_input
+        # image_input = tf.image.rgb_to_grayscale(image_input)
         input_warped = tf.contrib.image.transform(image_input, M[:, 1, :], interpolation='BILINEAR')
 
         mask_warped = tf.contrib.image.transform(tf.ones_like(input_warped), M[:, 1, :], interpolation='BILINEAR')
