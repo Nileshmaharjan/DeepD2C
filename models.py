@@ -35,7 +35,14 @@ class D2CEncoder(Layer):
     def call(self, inputs):
         secret, image = inputs
         secret = secret
-        image = image
+        image_copy = image
+        yuv_image = tf.image.rgb_to_yuv(image_copy)
+        y_space = yuv_image[:, :, :, 0]
+        u_space = yuv_image[:, :, :, 1]
+        v_space = yuv_image[:, :, :, 2]
+        y_expanded = tf.expand_dims(y_space, axis=3)
+        u_expanded = tf.expand_dims(u_space, axis=3)
+        v_expanded = tf.expand_dims(v_space, axis=3)
 
         secret = self.secret_dense(secret)
         secret = Reshape((64, 64, 1))(secret)
@@ -49,7 +56,7 @@ class D2CEncoder(Layer):
         conv6_a = self.convf(conv5_a + conv4_a + conv3_a + conv2_a + conv1_a)
         # conv7_a = self.convg(conv6_a)
 
-        conv1_b = self.conv1(image)
+        conv1_b = self.conv1(y_expanded)
         hyb_conv1 = concatenate([conv1_a, conv1_b], axis=3)
         conv2_b = self.conv2(hyb_conv1)
         hyb_conv2 = concatenate([conv2_a, conv2_b, conv1_b], axis=3)
@@ -62,10 +69,12 @@ class D2CEncoder(Layer):
         conv6_b = self.conv6(hyb_conv5)
         hyb_conv6 = concatenate([conv6_a, conv6_b, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
-        output = concatenate([image, conv7])
-        conv8 = self.conv8(output)
+        conv8 = self.conv8(conv7)
+        concat = tf.concat([y_expanded, u_expanded, v_expanded], axis=3)
+        rgb_color_space = tf.image.yuv_to_rgb(concat)
+        output = concatenate([rgb_color_space, conv8])
         # output = concatenate([image, conv8])
-        conv9 = self.conv9(conv8)
+        conv9 = self.conv9(output)
         return conv9
 
 
