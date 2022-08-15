@@ -62,6 +62,7 @@ def main():
 
     ber_list = []
     index = 1  # used in ber calculation
+    a = enumerate(tqdm(files_list))
     for i, filename in enumerate(tqdm(files_list)):
         image = Image.open(filename).convert("RGB")
         image = np.array(ImageOps.fit(image,(256, 256)),dtype=np.float32)
