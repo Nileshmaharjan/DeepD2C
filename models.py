@@ -37,12 +37,18 @@ class D2CEncoder(Layer):
         secret = secret
         image_copy = image
         yuv_image = tf.image.rgb_to_yuv(image_copy)
-        y_space = yuv_image[:, :, :, 0]
-        u_space = yuv_image[:, :, :, 1]
-        v_space = yuv_image[:, :, :, 2]
-        y_expanded = tf.expand_dims(y_space, axis=3)
-        u_expanded = tf.expand_dims(u_space, axis=3)
-        v_expanded = tf.expand_dims(v_space, axis=3)
+        # y_space = yuv_image[:, :, :, 0]
+        # u_space = yuv_image[:, :, :, 1]
+        # v_space = yuv_image[:, :, :, 2]
+        space_y = Lambda(lambda x: x[:, :, :, 0])(yuv_image)
+        reshape_Y = tf.reshape(space_y, [ -1, 256, 256, 1] )
+
+        space_uv = Lambda(lambda x: x[:, :, :, 1])(yuv_image)
+        reshape_uv = tf.reshape(space_uv, [-1, 256, 256, 2])
+        # # uv_space = Lambda( cover_cc = Lambda(lambda x: x[:, 1:, :, :])(cover_input))
+        # y_expanded = tf.expand_dims(y_space, axis=3)
+        # u_expanded = tf.expand_dims(u_space, axis=3)
+        # v_expanded = tf.expand_dims(v_space, axis=3)
 
         secret = self.secret_dense(secret)
         secret = Reshape((64, 64, 1))(secret)
@@ -54,9 +60,9 @@ class D2CEncoder(Layer):
         conv4_a = self.convd(conv3_a + conv2_a + conv1_a)
         conv5_a = self.conve(conv4_a + conv3_a + conv2_a + conv1_a)
         conv6_a = self.convf(conv5_a + conv4_a + conv3_a + conv2_a + conv1_a)
-        # conv7_a = self.convg(conv6_a)
 
-        conv1_b = self.conv1(y_expanded)
+
+        conv1_b = self.conv1(reshape_Y)
         hyb_conv1 = concatenate([conv1_a, conv1_b], axis=3)
         conv2_b = self.conv2(hyb_conv1)
         hyb_conv2 = concatenate([conv2_a, conv2_b, conv1_b], axis=3)
@@ -70,12 +76,11 @@ class D2CEncoder(Layer):
         hyb_conv6 = concatenate([conv6_a, conv6_b, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
         conv8 = self.conv8(conv7)
-        concat = tf.concat([y_expanded, u_expanded, v_expanded], axis=3)
-        rgb_color_space = tf.image.yuv_to_rgb(concat)
-        output = concatenate([rgb_color_space, conv8])
-        # output = concatenate([image, conv8])
-        conv9 = self.conv9(output)
-        return conv9
+        output = concatenate([reshape_uv, conv8])
+        conv9 = self.conv9(conv8)
+        # concat = tf.concat([conv9, reshape_uv], axis=3)
+        encoder_output = tf.image.yuv_to_rgb(conv9)
+        return encoder_output
 
 
 class D2CDecoder(Layer):

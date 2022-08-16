@@ -5,7 +5,7 @@ import datetime
 def basic_parameters():
     batch_size = numpy.array([4])
     learning_rate = numpy.array([0.0001])
-    number_of_steps = [10000, 15000, 30000, 60000, 80000, 100000]
+    number_of_steps = [10000, 20000, 30000, 40000, 50000, 60000]
     return learning_rate, batch_size, number_of_steps
 
 
