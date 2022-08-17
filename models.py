@@ -36,15 +36,15 @@ class D2CEncoder(Layer):
         secret, image = inputs
         secret = secret
         image_copy = image
-        yuv_image = tf.image.rgb_to_yuv(image_copy)
+        ycbcr_image = image_copy
         # y_space = yuv_image[:, :, :, 0]
         # u_space = yuv_image[:, :, :, 1]
         # v_space = yuv_image[:, :, :, 2]
-        space_y = Lambda(lambda x: x[:, :, :, 0])(yuv_image)
+        space_y = Lambda(lambda x: x[:, :, :, 0])(ycbcr_image)
         reshape_Y = tf.reshape(space_y, [ -1, 256, 256, 1] )
 
-        space_uv = Lambda(lambda x: x[:, :, :, 1])(yuv_image)
-        reshape_uv = tf.reshape(space_uv, [-1, 256, 256, 2])
+        space_cbcr = Lambda(lambda x: x[:, :, :, 1])(ycbcr_image)
+        reshape_cbcr = tf.reshape(space_cbcr, [-1, 256, 256, 2])
         # # uv_space = Lambda( cover_cc = Lambda(lambda x: x[:, 1:, :, :])(cover_input))
         # y_expanded = tf.expand_dims(y_space, axis=3)
         # u_expanded = tf.expand_dims(u_space, axis=3)
@@ -76,7 +76,7 @@ class D2CEncoder(Layer):
         hyb_conv6 = concatenate([conv6_a, conv6_b, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
         conv8 = self.conv8(conv7)
-        output = concatenate([reshape_uv, conv8])
+        output = concatenate([reshape_cbcr, conv8])
         conv9 = self.conv9(conv8)
         # concat = tf.concat([conv9, reshape_uv], axis=3)
         encoder_output = tf.image.yuv_to_rgb(conv9)

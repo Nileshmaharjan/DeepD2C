@@ -7,6 +7,7 @@ from tensorflow.python.saved_model import signature_constants
 from tqdm import tqdm
 from PIL import Image
 import numpy as np
+print(np.version)
 import time
 start_time = time.time()
 import os
@@ -15,7 +16,6 @@ from calculations import psnr
 
 BCH_POLYNOMIAL = 137
 BCH_BITS = 7
-
 
 def main():
     # read env files from environment

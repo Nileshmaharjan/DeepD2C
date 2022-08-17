@@ -30,7 +30,7 @@ def get_img_batch(files_list,
     for i in range(batch_size):
         img_cover_path = random.choice(files_list)
         try:
-            img_cover = Image.open(img_cover_path).convert("RGB")
+            img_cover = Image.open(img_cover_path).convert("YCbCr")
             img_cover = ImageOps.fit(img_cover, size)
             img_cover = np.array(img_cover, dtype=np.float32) / 255.
         except:
