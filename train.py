@@ -262,7 +262,7 @@ def main(batch, rate, steps):
                 writer.add_summary(summary, global_step)
 
             # if global_step % 100 == 0:
-            # save_path = saver.save(sess, join(newCheckPointPath, EXP_NAME + ".chkp"),
+            #     save_path = saver.save(sess, join(new_check_point_path, experiment_name + ".chkp"),
             #                        global_step=global_step)
 
     constant_graph_def = tf.graph_util.convert_variables_to_constants(
