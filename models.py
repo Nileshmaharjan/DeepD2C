@@ -13,24 +13,27 @@ class D2CEncoder(Layer):
         self.secret_dense = Dense(4096, activation='relu', kernel_initializer='he_normal')
 
         self.conv1 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv2 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv3 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv4 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv5 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv6 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        # self.conv7 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.conv2 = Conv2D(32, 3, activation='relu', strides =2, padding='same', kernel_initializer='he_normal')
+        self.conv3 = Conv2D(64, 3, activation='relu', strides=2, padding='same', kernel_initializer='he_normal')
+        self.conv4 = Conv2D(128, 3, activation='relu', strides=2, padding='same', kernel_initializer='he_normal')
+        self.conv5 = Conv2D(256, 3, activation='relu', strides=2, padding='same', kernel_initializer='he_normal')
 
         self.conva = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.convb = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.convc = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.convd = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conve = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.convf = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.convb = Conv2D(32, 3, activation='relu', strides =2, padding='same', kernel_initializer='he_normal')
+        self.convc = Conv2D(64, 3, activation='relu', strides =2, padding='same', kernel_initializer='he_normal')
+        self.convd = Conv2D(128, 3, activation='relu', strides =2, padding='same', kernel_initializer='he_normal')
+        self.conve = Conv2D(256, 3, activation='relu', padding='same',strides =2, kernel_initializer='he_normal')
 
+        self.up6 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.conv6 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.up7 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.conv7 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.up8 = Conv2D(32, 2, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.conv8 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.up9 = Conv2D(32, 2, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.conv9 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.conv10 = Conv2D(3, 1, activation='relu', padding='same', kernel_initializer='he_normal')
 
-        self.conv7 = Conv2D(16, 1, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv8 = Conv2D(16, 1, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv9 = Conv2D(3, 1, padding='same', kernel_initializer='he_normal')
 
     def call(self, inputs):
         secret, image = inputs
@@ -54,28 +57,44 @@ class D2CEncoder(Layer):
         conv3_a = self.convc(conv2_a)
         conv4_a = self.convd(conv3_a)
         conv5_a = self.conve(conv4_a)
-        conv6_a = self.convf(conv5_a)
+
 
         conv1_b = self.conv1(y_expanded)
         hyb_conv1 = concatenate([conv1_a, conv1_b], axis=3)
+
         conv2_b = self.conv2(hyb_conv1)
-        hyb_conv2 = concatenate([conv2_a, conv2_b, conv1_b], axis=3)
+        hyb_conv2 = concatenate([conv2_a, conv2_b], axis=3)
+
         conv3_b = self.conv3(hyb_conv2)
-        hyb_conv3 = concatenate([conv3_a, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv3 = concatenate([conv3_a, conv3_b], axis=3)
+
         conv4_b = self.conv4(hyb_conv3)
-        hyb_conv4 = concatenate([conv4_a, conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv4 = concatenate([conv4_a, conv4_b], axis=3)
+
         conv5_b = self.conv5(hyb_conv4)
-        hyb_conv5 = concatenate([conv5_a, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
-        conv6_b = self.conv6(hyb_conv5)
-        hyb_conv6 = concatenate([conv6_a, conv6_b, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
-        conv7 = self.conv7(hyb_conv6)
-        conv8 = self.conv8(conv7)
+        hyb_conv5 = concatenate([conv5_a, conv5_b], axis=3)
+
+        up6 = self.up6(UpSampling2D(size=(2, 2))(hyb_conv5))
+        merge6 = concatenate([hyb_conv4, up6], axis=3)
+        conv6 = self.conv6(merge6)
+
+        up7 = self.up7(UpSampling2D(size=(2, 2))(conv6))
+        merge7 = concatenate([hyb_conv3, up7], axis=3)
+        conv7 = self.conv7(merge7)
+
+        up8 = self.up8(UpSampling2D(size=(2, 2))(conv7))
+        merge8 = concatenate([hyb_conv2, up8], axis=3)
+        conv8 = self.conv8(merge8)
+
+        up9 = self.up9(UpSampling2D(size=(2, 2))(conv8))
+        merge9 = concatenate([hyb_conv1, up9], axis=3)
+        conv9 = self.conv9(merge9)
+
         concat = tf.concat([y_expanded, u_expanded, v_expanded], axis=3)
         rgb_color_space = tf.image.yuv_to_rgb(concat)
-        output = concatenate([rgb_color_space, conv8])
-        conv9 = self.conv9(output)
-        print('test')
-        return conv9
+        output = concatenate([rgb_color_space, conv9])
+        conv10 = self.conv10(output)
+        return conv10
 
 
 class D2CDecoder(Layer):
