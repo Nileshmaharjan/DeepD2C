@@ -10,7 +10,7 @@ from tensorflow.python.keras.layers import *
 class D2CEncoder(Layer):
     def __init__(self, height, width):
         super(D2CEncoder, self).__init__()
-        self.secret_dense = Dense(4096, activation='relu', kernel_initializer='he_normal')
+        self.secret_dense = Dense(12228, activation='relu', kernel_initializer='he_normal')
 
         self.conv1 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv2 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
@@ -36,51 +36,45 @@ class D2CEncoder(Layer):
         secret, image = inputs
         secret = secret
         image_copy = image
-        ycbcr_image = image_copy
-        # y_space = yuv_image[:, :, :, 0]
-        # u_space = yuv_image[:, :, :, 1]
-        # v_space = yuv_image[:, :, :, 2]
-        space_y = Lambda(lambda x: x[:, :, :, 0])(ycbcr_image)
-        reshape_Y = tf.reshape(space_y, [ -1, 256, 256, 1] )
-
-        space_cbcr = Lambda(lambda x: x[:, :, :, 1])(ycbcr_image)
-        reshape_cbcr = tf.reshape(space_cbcr, [-1, 256, 256, 2])
-        # # uv_space = Lambda( cover_cc = Lambda(lambda x: x[:, 1:, :, :])(cover_input))
-        # y_expanded = tf.expand_dims(y_space, axis=3)
-        # u_expanded = tf.expand_dims(u_space, axis=3)
-        # v_expanded = tf.expand_dims(v_space, axis=3)
+        yuv_image = tf.image.rgb_to_yuv(image_copy)
+        y_space = yuv_image[:, :, :, 0]
+        u_space = yuv_image[:, :, :, 1]
+        v_space = yuv_image[:, :, :, 2]
+        y_expanded = tf.expand_dims(y_space, axis=3)
+        u_expanded = tf.expand_dims(u_space, axis=3)
+        v_expanded = tf.expand_dims(v_space, axis=3)
 
         secret = self.secret_dense(secret)
-        secret = Reshape((64, 64, 1))(secret)
-        secret_enlarged = UpSampling2D(size=(4, 4))(secret)
+        secret = Reshape((64, 64, 3))(secret)
+        secret_rgb = tf.image.grayscale_to_rgb(secret)
+        secret_enlarged = UpSampling2D(size=(4, 4))(secret_rgb)
 
         conv1_a = self.conva(secret_enlarged)
         conv2_a = self.convb(conv1_a)
-        conv3_a = self.convc(conv2_a + conv1_a)
-        conv4_a = self.convd(conv3_a + conv2_a + conv1_a)
-        conv5_a = self.conve(conv4_a + conv3_a + conv2_a + conv1_a)
-        conv6_a = self.convf(conv5_a + conv4_a + conv3_a + conv2_a + conv1_a)
+        conv3_a = self.convc(conv2_a)
+        conv4_a = self.convd(conv3_a)
+        conv5_a = self.conve(conv4_a)
+        conv6_a = self.convf(conv5_a)
 
-
-        conv1_b = self.conv1(reshape_Y)
+        conv1_b = self.conv1(y_expanded)
         hyb_conv1 = concatenate([conv1_a, conv1_b], axis=3)
         conv2_b = self.conv2(hyb_conv1)
-        hyb_conv2 = concatenate([conv2_a, conv2_b, conv1_b], axis=3)
+        hyb_conv2 = concatenate([conv2_a, conv2_b], axis=3)
         conv3_b = self.conv3(hyb_conv2)
-        hyb_conv3 = concatenate([conv3_a, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv3 = concatenate([conv3_a, conv3_b], axis=3)
         conv4_b = self.conv4(hyb_conv3)
-        hyb_conv4 = concatenate([conv4_a, conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv4 = concatenate([conv4_a, conv4_b], axis=3)
         conv5_b = self.conv5(hyb_conv4)
-        hyb_conv5 = concatenate([conv5_a, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv5 = concatenate([conv5_a, conv5_b], axis=3)
         conv6_b = self.conv6(hyb_conv5)
-        hyb_conv6 = concatenate([conv6_a, conv6_b, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
+        hyb_conv6 = concatenate([conv6_a, conv6_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
         conv8 = self.conv8(conv7)
-        output = concatenate([reshape_cbcr, conv8])
-        conv9 = self.conv9(conv8)
-        # concat = tf.concat([conv9, reshape_uv], axis=3)
-        encoder_output = tf.image.yuv_to_rgb(conv9)
-        return encoder_output
+        concat = tf.concat([y_expanded, u_expanded, v_expanded], axis=3)
+        output = concatenate([concat, conv8])
+        conv9 = self.conv9(output)
+        return conv9
+
 
 
 class D2CDecoder(Layer):
