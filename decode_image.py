@@ -47,6 +47,7 @@ def main():
 
     binary_input = np.loadtxt(binary_file_path)
     input_data = np.asarray(binary_input, dtype=int).tolist()
+    print('input_data', input_data)
 
     sess = tf.InteractiveSession(graph=tf.Graph())
 
@@ -72,19 +73,18 @@ def main():
 
         decoded_data = sess.run([output_secret],feed_dict=feed_dict)[0][0]
 
-        # value  changed compared to stega stamp here?
-        packet_binary = "".join([str(int(bit)) for bit in decoded_data[:16]])
-        packet = bytes(int(packet_binary[i : i + 8], 2) for i in range(0, len(packet_binary), 8))
-        packet = bytearray(packet)
+        # packet_binary = "".join([str(int(bit)) for bit in decoded_data[:16]])
+        # packet = bytes(int(packet_binary[i : i + 8], 2) for i in range(0, len(packet_binary), 8))
+        # packet = bytearray(packet)
+        #
+        # data, ecc = packet[:-bch.ecc_bytes], packet[-bch.ecc_bytes:]
 
-        data, ecc = packet[:-bch.ecc_bytes], packet[-bch.ecc_bytes:]
 
         decoded = np.asarray(decoded_data, dtype=int).tolist()
 
         err = 0
         n = 200
         for i in range(n):
-            print(i)
             if input_data[i] == decoded[i]:
                 err = err + 0
             else:
@@ -92,8 +92,7 @@ def main():
         ber = err/n
         ber_list.append(ber)
         index = index + 1
-        print('Total error', err)
-
+    print('ber', ber_list)
     avg_ber = sum(ber_list) / index
     f = open(ber_file_path, "w+")
     f.write(f"The average ber value from {index - 1} images is: {avg_ber} ")

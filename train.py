@@ -9,8 +9,10 @@ import tensorflow as tf
 tf.disable_v2_behavior()
 import utils
 import models
+import models2
 from os.path import join
 from parameters import *
+import random
 
 # Specify your training path.
 # Keep your training folder on the :/C drive with no parent folders. Otherwise you might encounter some errors.
@@ -30,7 +32,7 @@ def get_img_batch(files_list,
     for i in range(batch_size):
         img_cover_path = random.choice(files_list)
         try:
-            img_cover = Image.open(img_cover_path).convert("YCbCr")
+            img_cover = Image.open(img_cover_path).convert("RGB")
             img_cover = ImageOps.fit(img_cover, size)
             img_cover = np.array(img_cover, dtype=np.float32) / 255.
         except:
@@ -92,11 +94,12 @@ def main(batch, rate, steps):
     parser.add_argument('--rnd_noise_ramp', type=int, default=1000)
     parser.add_argument('--contrast_ramp', type=int, default=1000)
     parser.add_argument('--jpeg_quality_ramp', type=float, default=1000)
-    parser.add_argument('--no_im_loss_steps', help="Train without image loss for first x steps", type=int, default=500)
+    parser.add_argument('--no_im_loss_steps', help="Train without image loss for first x steps", type=int, default=2500)
     parser.add_argument('--pretrained', type=str, default=None)
     args = parser.parse_args()
 
-    files_list = glob.glob(join(os.getenv('TRAIN_PATH'), "data_augmented/*"))
+
+    files_list = glob.glob(join(os.getenv('TRAIN_PATH'), "*"))
 
     experiment_name, log_name, saved_model_name, check_point_name = naming_convention(args.exp_name, rate,
                                                                                       batch, steps)
@@ -137,6 +140,7 @@ def main(batch, rate, steps):
     decoder = models.D2CDecoder(height=height, width=width)
 
     discriminator = models.Discriminator()
+    steps = 0;
 
     buildmodel = models.BuildModel(encoder=encoder,
                                    decoder=decoder,
@@ -150,7 +154,8 @@ def main(batch, rate, steps):
                                    loss_scales=loss_scales_pl,
                                    yuv_scales=yuv_scales_pl,
                                    args=args,
-                                   global_step=global_step_tensor)
+                                   global_step=global_step_tensor,
+                                   steps = steps)
 
     loss_op, secret_loss_op, D_loss_op, summary_op, image_summary_op, _ = buildmodel(
         encoder=encoder,
@@ -165,7 +170,9 @@ def main(batch, rate, steps):
         loss_scales=loss_scales_pl,
         yuv_scales=yuv_scales_pl,
         args=args,
-        global_step=global_step_tensor)
+        global_step=global_step_tensor,
+        steps = steps
+    )
 
     tvars = tf.trainable_variables()  # returns all variables created(the two variable scopes) and makes trainable true
 
@@ -236,12 +243,17 @@ def main(batch, rate, steps):
 
             print(global_step % 100, "test")
 
+            loss_image = utils.get_image_loss(global_step);
+
+
+
             if global_step % 100 == 0:
                 summary, global_step = sess.run([summary_op, global_step_tensor], feed_dict)
                 writer.add_summary(summary, global_step)
                 summary = tf.Summary(
-                    value=[tf.Summary.Value(tag='transformer/rnd_tran', simple_value=rnd_tran),
-                           tf.Summary.Value(tag='loss_scales/l2_loss_scale',
+                    value=[
+                        tf.Summary.Value(tag='transformer/rnd_tran', simple_value=rnd_tran),
+                        tf.Summary.Value(tag='loss_scales/l2_loss_scale',
                                             simple_value=l2_loss_scale),
                            tf.Summary.Value(tag='loss_scales/lpips_loss_scale',
                                             simple_value=lpips_loss_scale),
@@ -252,7 +264,10 @@ def main(batch, rate, steps):
                            tf.Summary.Value(tag='loss_scales/v_scale', simple_value=args.v_scale),
                            tf.Summary.Value(tag='loss_scales/G_loss_scale', simple_value=G_loss_scale),
                            tf.Summary.Value(tag='loss_scales/L2_edge_gain',
-                                            simple_value=l2_edge_gain), ])
+                                            simple_value=l2_edge_gain),
+                           tf.Summary.Value(tag='loss_scales/image_loss', simple_value = loss_image
+                                            )
+                           ])
                 writer.add_summary(summary, global_step)
 
             print(f'step : {global_step}, loss : {loss}')
@@ -261,9 +276,200 @@ def main(batch, rate, steps):
                 summary, global_step = sess.run([image_summary_op, global_step_tensor], feed_dict)
                 writer.add_summary(summary, global_step)
 
-            # if global_step % 100 == 0:
-            # save_path = saver.save(sess, join(newCheckPointPath, EXP_NAME + ".chkp"),
-            #                        global_step=global_step)
+            if global_step == 60000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(60000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 70000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(70000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 80000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(80000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 90000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(90000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 100000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(100000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 110000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(110000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 130000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(130000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 140000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(140000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 150000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(150000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 160000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(160000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 165000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(165000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 170000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(170000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 175000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(175000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 180000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(180000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
+
+            if global_step == 190000:
+                constant_graph_def = tf.graph_util.convert_variables_to_constants(
+                    sess,
+                    sess.graph.as_graph_def(),
+                    [deploy_hide_image_op.name[:-2], residual_op.name[:-2], deploy_decoder_op.name[:-2]])
+                with tf.Session(graph=tf.Graph()) as session:
+                    tf.import_graph_def(constant_graph_def, name='')
+                    tf.saved_model.simple_save(session,
+                                               os.getenv('SAVED_MODELS') + '/' + saved_model_name + str(190000),
+                                               inputs={'secret': secret_pl, 'image': image_pl},
+                                               outputs={'stegastamp': deploy_hide_image_op, 'residual': residual_op,
+                                                        'decoded': deploy_decoder_op})
 
     constant_graph_def = tf.graph_util.convert_variables_to_constants(
         sess,
@@ -286,4 +492,5 @@ if __name__ == "__main__":
     for batch in batch_size:
         for rate in learning_rate:
             for steps in number_of_steps:
+                print('why not running')
                 main(batch, rate, steps)

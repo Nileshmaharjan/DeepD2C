@@ -112,6 +112,60 @@ def main():
 
     print(f'data : {data}\necc : {ecc}\npacket : {packet}\npacket_binary : {packet_binary}\nsecret : {secret}')
 
+    # if args.save_dir is not None:
+    #     if not os.path.exists(args.save_dir):
+    #         os.makedirs(args.save_dir)
+    #     size = (width, height)
+    #     counter = 1
+    #     index = 1 # used in psnr calculation for providing test image name
+    #     psnr_values = []
+    #     for filename in tqdm(files_list):
+    #         image = Image.open(filename).convert("RGB")
+    #         image = np.array(ImageOps.fit(image,size),dtype=np.float32)
+    #         image /= 255.
+    #
+    #         feed_dict = {input_secret:[secret],
+    #                      input_image:[image]}
+    #
+    #         hidden_img, residual = sess.run([output_stegastamp, output_residual],feed_dict=feed_dict)
+    #
+    #         #residual : data checkerboard image
+    #         residual = np.squeeze(residual, axis=0)
+    #         residual = residual[:, :, 0]
+    #         img = Image.fromarray(residual, 'L')
+    #
+    #         # Saving checkerboard input image
+    #         img.save(checkerboard_file_directory_path+ f"/{counter}" + "." + "png")
+    #         counter += 1
+    #
+    #         #hidden_img : data embedded image
+    #         rescaled = (hidden_img[0] * 255).astype(np.uint8)
+    #
+    #         raw_img = (image * 255).astype(np.uint8)
+    #
+    #         #what is this??
+    #         residual = residual[0]+.5
+    #
+    #         residual = (residual * 255).astype(np.uint8)
+    #
+    #         save_name = filename.split('\\')[-1].split('.')[0]
+    #
+    #         im = Image.fromarray(np.array(rescaled))
+    #         encoded_image_path = args.save_dir + '/'+save_name+'_encoded_.png';
+    #         im.save(encoded_image_path)
+    #
+    #         input_image_path = test_image_directory + '/' + str(index)+'.jpg'
+    #         index = index + 1
+    #
+    #         psnr_value = psnr.calculate_psnr(input_image_path, encoded_image_path)
+    #         print('psnr', psnr_value)
+    #         psnr_values.append(psnr_value)
+    #
+    #     # only calculate this value if images are provided and not a single image
+    #     max_psnr = np.max(psnr_values)
+    #     f = open(psnr_file_path, "w+")
+    #     f.write(f"The max psnr value from {index - 1} images is: {max_psnr} ")
+
     if args.save_dir is not None:
         if not os.path.exists(args.save_dir):
             os.makedirs(args.save_dir)
@@ -129,24 +183,21 @@ def main():
 
             hidden_img, residual = sess.run([output_stegastamp, output_residual],feed_dict=feed_dict)
 
-            #residual : data checkerboard image
-            residual = np.squeeze(residual, axis=0)
-            residual = residual[:, :, 0]
-            img = Image.fromarray(residual, 'L')
 
-            # Saving checkerboard input image
-            img.save(checkerboard_file_directory_path+ f"/{counter}" + "." + "png")
-            counter += 1
-
-            #hidden_img : data embedded image
             rescaled = (hidden_img[0] * 255).astype(np.uint8)
-
             raw_img = (image * 255).astype(np.uint8)
-
-            #what is this??
             residual = residual[0]+.5
 
             residual = (residual * 255).astype(np.uint8)
+
+            # #residual : data checkerboard image
+            # residual = np.squeeze(residual, axis=0)
+            # residual = residual[:, :, 0]
+            # img = Image.fromarray(residual, 'L')
+            #
+            # # Saving checkerboard input image
+            # img.save(checkerboard_file_directory_path+ f"/{counter}" + "." + "png")
+            # counter += 1
 
             save_name = filename.split('\\')[-1].split('.')[0]
 
@@ -165,7 +216,6 @@ def main():
         max_psnr = np.max(psnr_values)
         f = open(psnr_file_path, "w+")
         f.write(f"The max psnr value from {index - 1} images is: {max_psnr} ")
-
 
 if __name__ == "__main__":
     main()

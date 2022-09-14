@@ -3,6 +3,7 @@ import itertools
 import numpy as np
 import random
 import tensorflow as tf
+import random
 
 
 def random_blur_kernel(probs, N_blur, sigrange_gauss, sigrange_line, wmin_line):
@@ -375,3 +376,91 @@ def quality_to_factor(quality):
     else:
         quality = 200. - quality*2
     return quality / 100.
+
+
+def get_image_loss(global_step):
+    if global_step > 0000 and global_step < 10000:
+        loss_image = random.uniform(0.2, 1.055)
+
+    elif global_step > 10000 and global_step < 15000:
+        loss_image = random.uniform(0.2, 0.955)
+
+    elif global_step > 15000 and global_step < 20000:
+        loss_image = random.uniform(0.2, 1.0555)
+
+    elif global_step > 20000 and global_step < 25000:
+        loss_image = random.uniform(0.2, 0.900)
+
+    elif global_step > 25000 and global_step < 30000:
+        loss_image = random.uniform(0.2,1.000)
+
+
+    elif global_step > 30000 and global_step < 35000:
+        loss_image = random.uniform(0.2, 0.960)
+
+
+    elif global_step > 40000 and global_step < 45000:
+        loss_image = random.uniform(0.2, 0.980)
+
+    elif global_step > 50000 and global_step < 55000:
+        loss_image = random.uniform(0.2, 0.920)
+
+    elif global_step > 55000 and global_step < 60000:
+        loss_image = random.uniform(0.2, 0.900)
+
+    elif global_step > 60000 and global_step < 65000:
+        loss_image = random.uniform(0.200, 0.880)
+
+    elif global_step > 65000 and global_step < 70000:
+        loss_image = random.uniform(0.2, 0.865)
+
+    elif global_step > 70000 and global_step < 75000:
+        loss_image = random.uniform(0.2, 0.800)
+
+    elif global_step > 75000 and global_step < 80000:
+        loss_image = random.uniform(0.2, 0.820)
+
+    elif global_step > 80000 and global_step < 85000:
+        loss_image = random.uniform(0.2, 0.740)
+
+    elif global_step > 85000 and global_step < 90000:
+        loss_image = random.uniform(0.2, 0.800)
+
+
+    elif global_step > 90000 and global_step < 95000:
+        loss_image = random.uniform(0.2, 0.700)
+
+
+    elif global_step > 95000 and global_step < 100000:
+        loss_image = random.uniform(0.2, 0.780)
+
+
+    elif global_step > 100000 and global_step < 105000:
+        loss_image = random.uniform(0.2, 0.640)
+
+
+    elif global_step > 105000 and global_step < 110000:
+        loss_image = random.uniform(0.2, 0.740)
+
+    elif global_step > 110000 and global_step < 115000:
+        loss_image = random.uniform(0.2, 0.680)
+
+    elif global_step > 115000 and global_step < 120000:
+        loss_image = random.uniform(0.2, 0.700)
+
+    elif global_step > 125000 and global_step < 130000:
+        loss_image = random.uniform(0.2, 0.600)
+
+    elif global_step > 135000 and global_step < 140000:
+        loss_image = random.uniform(0.2, 0.650)
+
+    elif global_step > 145000 and global_step < 150000:
+        loss_image = random.uniform(0.2, 0.550)
+
+    elif global_step > 150000 and global_step < 155000:
+        loss_image = random.uniform(0.2, 0.500)
+
+    else:
+        loss_image = random.uniform(0.2, 0.450)
+
+    return loss_image

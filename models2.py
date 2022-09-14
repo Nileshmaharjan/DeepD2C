@@ -11,31 +11,33 @@ class D2CEncoder(Layer):
     def __init__(self, height, width):
         super(D2CEncoder, self).__init__()
         self.secret_dense = Dense(3072, activation='relu', kernel_initializer='he_normal')
+        # self.secret_dense2 = Dense(4096, activation='relu', kernel_initializer='he_normal')
+        # self.secret_dense3 = Dense(4096, activation='relu', kernel_initializer='he_normal')
 
         self.conv1 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv2 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv3 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv4 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv5 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv6 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv7 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.conv6 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        # self.conv7 = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
 
         self.conva = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.convb = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.convc = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.convd = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conve = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.convf = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.convg = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        self.convf = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
+        # self.convg = Conv2D(16, 3, activation='relu', padding='same', kernel_initializer='he_normal')
 
+        self.conv7 = Conv2D(16, 1, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv8 = Conv2D(16, 1, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv9 = Conv2D(16, 1, activation='relu', padding='same', kernel_initializer='he_normal')
-        self.conv10 = Conv2D(3, 1, padding='same', kernel_initializer='he_normal')
-
-        self.dropout = Dropout(0.25)
+        self.conv9 = Conv2D(3, 1, padding='same', kernel_initializer='he_normal')
 
     def call(self, inputs):
         secret, image = inputs
+        # secret_copy2 = secret
+        # secret_copy3 = secret
         yuv_image = tf.image.rgb_to_yuv(image)
         y_space = yuv_image[:, :, :, 0]
         u_space = yuv_image[:, :, :, 1]
@@ -48,43 +50,45 @@ class D2CEncoder(Layer):
         secret = Reshape((32, 32, 3))(secret)
         secret_enlarged = UpSampling2D(size=(8, 8))(secret)
 
+        # secret_2 = self.secret_dense2(secret_copy2)
+        # secret_2_mod = Reshape((64, 64, 1))(secret_2)
+        # secret_enlarged_2 = UpSampling2D(size=(4, 4))(secret_2_mod)
+        #
+        # secret_3 = self.secret_dense3(secret_copy3)
+        # secret_3_mod = Reshape((64, 64, 1))(secret_3)
+        # secret_enlarged_3 = UpSampling2D(size=(4, 4))(secret_3_mod)
+
+        # secret_combined = concatenate([secret_enlarged, secret_enlarged_2, secret_enlarged_3], axis=3)
 
         conv1_a = self.conva(secret_enlarged)
         conv2_a = self.convb(conv1_a)
-        conv3_a = self.convc(conv2_a)
-        conv4_a = self.convd(conv3_a)
-        conv5_a = self.conve(conv4_a)
-        conv6_a = self.convf(conv5_a)
-        conv7_a = self.convg(conv6_a)
+        conv3_a = self.convc(conv2_a +  conv1_a)
+        conv4_a = self.convd(conv3_a + conv2_a+ conv1_a)
+        conv5_a = self.conve(conv4_a + conv3_a + conv2_a+ conv1_a)
+        conv6_a = self.convf(conv5_a + conv4_a + conv3_a + conv2_a+ conv1_a)
+        # conv7_a = self.convg(conv6_a)
 
         conv1_b = self.conv1(y_expanded)
         hyb_conv1 = concatenate([conv1_a, conv1_b], axis=3)
-        hyb_conv1 = self.dropout(hyb_conv1)
         conv2_b = self.conv2(hyb_conv1)
         hyb_conv2 = concatenate([conv2_a, conv2_b, conv1_b], axis=3)
-        hyb_conv2 = self.dropout(hyb_conv2)
         conv3_b = self.conv3(hyb_conv2)
         hyb_conv3 = concatenate([conv3_a, conv3_b, conv2_b, conv1_b], axis=3)
-        hyb_conv3 = self.dropout(hyb_conv3)
         conv4_b = self.conv4(hyb_conv3)
         hyb_conv4 = concatenate([conv4_a, conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
-        hyb_conv4 = self.dropout(hyb_conv4)
         conv5_b = self.conv5(hyb_conv4)
         hyb_conv5 = concatenate([conv5_a, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
-        hyb_conv5 = self.dropout(hyb_conv5)
         conv6_b = self.conv6(hyb_conv5)
         hyb_conv6 = concatenate([conv6_a, conv6_b, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b], axis=3)
-        hyb_conv6 = self.dropout(hyb_conv6)
-        conv7_b = self.conv7(hyb_conv6)
-        hyb_conv7 = concatenate([conv7_a, conv7_b, conv6_b, conv5_b,  conv4_b, conv3_b, conv2_b, conv1_b ], axis=3)
-        hyb_conv7 = self.dropout(hyb_conv7)
-        conv8 = self.conv8(hyb_conv7)
+        conv7 = self.conv7(hyb_conv6)
+        # hyb_conv7 = concatenate([conv7_a, conv7_b ], axis=3)
+        # conv8 = self.conv8(hyb_conv7)
 
-        conv9 = self.conv9(conv8)
+        conv8 = self.conv8(conv7)
         concat = tf.concat([ y_expanded, u_expanded, v_expanded], axis=3)
-        output = concatenate([concat, conv9])
-        conv10 = self.conv10(output)
-        return conv10
+        output = concatenate([concat, conv8])
+        conv9 = self.conv9(output)
+        return conv9
 
 
 
@@ -129,7 +133,7 @@ class Discriminator(Layer):
 
 class BuildModel:
     def __init__(self, encoder, decoder, discriminator, secret_input, image_input, l2_edge_gain, borders, secret_size,
-                 M, loss_scales, yuv_scales, args, global_step, steps):
+                 M, loss_scales, yuv_scales, args, global_step):
         self.encoder = encoder
         self.decoder = decoder
         self.discriminator = discriminator
@@ -143,12 +147,10 @@ class BuildModel:
         self.yuv_scales = yuv_scales
         self.args = args
         self.global_step = global_step
-        self.steps = steps
 
     def __call__(self, encoder, decoder, discriminator, secret_input, image_input, l2_edge_gain, borders, secret_size,
-                 M, loss_scales, yuv_scales, args, global_step, steps):
+                 M, loss_scales, yuv_scales, args, global_step):
         print(M[:, 1, :], "projective_transform_matrix")
-
 
         input_warped = tf.contrib.image.transform(image_input, M[:, 1, :], interpolation='BILINEAR')
 
@@ -235,14 +237,14 @@ class BuildModel:
                                           tf.summary.scalar('bit_acc', bit_acc, family='train'),
                                           tf.summary.scalar('bit_loss', bit_loss, family='train'),
                                           tf.summary.scalar('str_acc', str_acc, family='train'),
-                                          # tf.summary.scalar('loss', loss_op, family='train'),
+                                          tf.summary.scalar('loss', loss_op, family='train'),
                                           tf.summary.scalar('image_loss', image_loss_op, family='train'),
-                                          # tf.summary.scalar('G_loss', G_loss, family='train'),
+                                          tf.summary.scalar('G_loss', G_loss, family='train'),
                                           tf.summary.scalar('secret_loss', secret_loss_op, family='train'),
-                                          # tf.summary.scalar('dis_loss', D_loss, family='train'),
-                                          # tf.summary.scalar('Y_loss', yuv_loss_op[0], family='color_loss'),
-                                          # tf.summary.scalar('U_loss', yuv_loss_op[1], family='color_loss'),
-                                          # tf.summary.scalar('V_loss', yuv_loss_op[2], family='color_loss'),
+                                          tf.summary.scalar('dis_loss', D_loss, family='train'),
+                                          tf.summary.scalar('Y_loss', yuv_loss_op[0], family='color_loss'),
+                                          tf.summary.scalar('U_loss', yuv_loss_op[1], family='color_loss'),
+                                          tf.summary.scalar('V_loss', yuv_loss_op[2], family='color_loss'),
                                       ] + transform_summaries)
 
         image_input_summary = models.ImageToSummary(image_input, 'image_input', family='input')
