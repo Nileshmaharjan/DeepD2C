@@ -28,11 +28,13 @@ def main():
     ber_file_name = "ber.txt"
     ber_file_path = experiment_directory_path + '/' + ber_file_name
 
+    experiment_image_path = os.getenv('experiment_image_path')
+
 
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str,  default=model_directory)
-    parser.add_argument('--image', type=str, default=None)
+    parser.add_argument('--image', type=str, default=experiment_image_path)
     parser.add_argument('--images_dir', type=str, default=encoded_file_directory_path)
     parser.add_argument('--secret_size', type=int, default=200)
     args = parser.parse_args()

@@ -10,7 +10,7 @@ from tensorflow.python.keras.layers import *
 class D2CEncoder(Layer):
     def __init__(self, height, width):
         super(D2CEncoder, self).__init__()
-        self.secret_dense = Dense(4096, activation='relu', kernel_initializer='he_normal')
+        self.secret_dense = Dense(1024, activation='relu', kernel_initializer='he_normal')
 
         self.conv1 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
         self.conv2 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')
@@ -38,8 +38,8 @@ class D2CEncoder(Layer):
         image = image
 
         secret = self.secret_dense(secret)
-        secret = Reshape((64, 64, 1))(secret)
-        secret_enlarged = UpSampling2D(size=(4, 4))(secret)
+        secret = Reshape((32, 32, 1))(secret)
+        secret_enlarged = UpSampling2D(size=(8, 8))(secret)
 
         conv1_a = self.conva(secret_enlarged)
         conv2_a = self.convb(conv1_a)
@@ -62,10 +62,10 @@ class D2CEncoder(Layer):
         conv6_b = self.conv6(hyb_conv5)
         hyb_conv6 = concatenate([conv6_a, conv6_b], axis=3)
         conv7 = self.conv7(hyb_conv6)
-        output = concatenate([image, conv7])
-        conv8 = self.conv8(output)
-        # output = concatenate([image, conv8])
-        conv9 = self.conv9(conv8)
+        # output = concatenate([image, conv7])
+        conv8 = self.conv8(conv7)
+        output = concatenate([image, conv8])
+        conv9 = self.conv9(output)
         return conv9
 
 
