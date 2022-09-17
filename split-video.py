@@ -4,7 +4,7 @@ import cv2
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-def print_hi(name):
+def main():
 
     vidcap = cv2.VideoCapture('video/test.mov')
     success, image = vidcap.read()
@@ -12,13 +12,12 @@ def print_hi(name):
     imgcount = 1
     while success:
         vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000))
-        cv2.imwrite("video/test2/clicked-%d.png" % imgcount, image)  # save frame as PNG file
+        cv2.imwrite("video/split/A%d.jpg" % imgcount, image)  # save frame as PNG file
         success, image = vidcap.read()
         print('Read a new frame: ', success)
-        count += 3.5
+        count += 3
         imgcount += 1
 
-
-print_hi('PyCharm')
+main()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

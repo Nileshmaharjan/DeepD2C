@@ -34,7 +34,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str,  default=model_directory)
-    parser.add_argument('--image', type=str, default=experiment_image_path)
+    parser.add_argument('--image', type=str, default=None)
     parser.add_argument('--images_dir', type=str, default=encoded_file_directory_path)
     parser.add_argument('--secret_size', type=int, default=200)
     args = parser.parse_args()
@@ -81,11 +81,10 @@ def main():
         data, ecc = packet[:-bch.ecc_bytes], packet[-bch.ecc_bytes:]
 
         decoded = np.asarray(decoded_data, dtype=int).tolist()
-
+        print(i + 1)
         err = 0
         n = 200
         for i in range(n):
-            print(i)
             if input_data[i] == decoded[i]:
                 err = err + 0
             else:

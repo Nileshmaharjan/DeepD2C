@@ -12,3 +12,5 @@ DCC/
 pnsr_test/images
 ber_test_directory/
 video/
+ber_test_distance_angle/
+ber_test_screen_brightness/

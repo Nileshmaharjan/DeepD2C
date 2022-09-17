@@ -135,7 +135,7 @@ def main():
             img = Image.fromarray(residual, 'L')
 
             # Saving checkerboard input image
-            img.save(checkerboard_file_directory_path+ f"/{counter}" + "." + "png")
+            img.save(checkerboard_file_directory_path+ f"/{counter}" + "." + "jpg")
             counter += 1
 
             #hidden_img : data embedded image
@@ -151,7 +151,7 @@ def main():
             save_name = filename.split('\\')[-1].split('.')[0]
 
             im = Image.fromarray(np.array(rescaled))
-            encoded_image_path = args.save_dir + '/'+save_name+'_encoded_.png';
+            encoded_image_path = args.save_dir + '/'+save_name+'_encoded_.jpg';
             im.save(encoded_image_path)
 
             input_image_path = test_image_directory + '/' + str(index)+'.jpg'
