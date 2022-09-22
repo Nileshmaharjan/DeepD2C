@@ -9,3 +9,6 @@ other/
 pb_viewer/
 experiments/
 DCC/
+ber_test_screen_brightness/
+ber_test_distance_angle/
+video/
