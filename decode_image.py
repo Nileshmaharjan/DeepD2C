@@ -93,6 +93,7 @@ def main():
         ber_list.append(ber)
         index = index + 1
         print('Total error', err)
+        print('a', filename)
 
     avg_ber = sum(ber_list) / index
     f = open(ber_file_path, "w+")

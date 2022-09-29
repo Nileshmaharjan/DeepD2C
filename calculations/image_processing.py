@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 import re
 
-images_to_be_aligned_path = 'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/no_flash/20'
+images_to_be_aligned_path = 'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/resolution/flash/1280x720/not_aligned'
 referenced_images_path = 'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/reference_images'
-aligned_images_path = 'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/no_flash/mod'
+aligned_images_path = 'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/resolution/flash/1280x720/aligned'
 
 import os
 from pathlib import Path
@@ -59,7 +59,7 @@ for index, file in enumerate(images_to_be_aligned_path_modified):
     # matches.sort(key = lambda x: x.distance)
 
     # Take the top 90 % matches forward.
-    matches = matches[:int(len(matches) * 0.9)]
+    matches = matches[:int(len(matches) * 90)]
     no_of_matches = len(matches)
 
     # Define empty matrices of shape no_of_matches * 2.
