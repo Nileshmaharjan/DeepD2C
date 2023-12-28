@@ -36,3 +36,12 @@ python encode_image.py \
   --secret Changwon_National
 ```
 
+## Decoding a Message
+The script `decode_image.py` can be used to decode a message from a StegaStamp.
+
+Example usage:
+```bash=
+python decode_image.py \
+  saved_models/densed2c_pretrained \
+  --image out/test_hidden.png
+
