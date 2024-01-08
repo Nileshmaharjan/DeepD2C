@@ -3,15 +3,14 @@ import glob
 from PIL import Image, ImageOps
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib.image
 from tensorflow.python.saved_model import tag_constants
 from tensorflow.python.saved_model import signature_constants
 from tqdm import tqdm
+import re
 
 import time
 start_time = time.time()
 
-from dotenv import load_dotenv
 import os
 
 BCH_POLYNOMIAL = 137
@@ -25,17 +24,12 @@ def main():
     secret_size = os.getenv('secret_size')
     binary_file_path = os.getenv('binary_file_directory_path')
     experiment_directory_path = os.getenv('experiment_directory_path')
-    ber_file_name = "ber.txt"
-    ber_file_path = experiment_directory_path + '/' + ber_file_name
-
-    experiment_image_path = os.getenv('experiment_image_path')
-
 
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str,  default=model_directory)
+    parser.add_argument('--model', type=str,  default="C:/Users/User/Documents/Projects/Nilesh/DenseD2C/saved_models/encoder_3072_cover_image_side_encoder/encoder_3072_dense_only_cover_image_side_encoder_structure-Sep-04-08-22-19-lr-0.0001-batch_size-4-no_of_steps-200000180000")
     parser.add_argument('--image', type=str, default=None)
-    parser.add_argument('--images_dir', type=str, default=encoded_file_directory_path)
+    parser.add_argument('--images_dir', type=str, default='C:/Users/User/Documents/Projects/Nilesh/DenseD2C/new_experiments/Jan-08-14-52-39-PM/encoded/')
     parser.add_argument('--secret_size', type=int, default=200)
     args = parser.parse_args()
 
@@ -47,7 +41,7 @@ def main():
         print('Missing input image')
         return
 
-    binary_input = np.loadtxt(binary_file_path)
+    binary_input = np.loadtxt('new_experiments/Jan-08-14-52-39-PM/binary_input.txt')
     input_data = np.asarray(binary_input, dtype=int).tolist()
 
     sess = tf.InteractiveSession(graph=tf.Graph())
@@ -64,6 +58,7 @@ def main():
 
     ber_list = []
     index = 1  # used in ber calculation
+
     for i, filename in enumerate(tqdm(files_list)):
         image = Image.open(filename).convert("RGB")
         image = np.array(ImageOps.fit(image,(256, 256)),dtype=np.float32)
@@ -73,15 +68,12 @@ def main():
 
         decoded_data = sess.run([output_secret],feed_dict=feed_dict)[0][0]
 
-        # value  changed compared to stega stamp here?
-        packet_binary = "".join([str(int(bit)) for bit in decoded_data[:16]])
+        packet_binary = "".join([str(int(bit)) for bit in decoded_data])
         packet = bytes(int(packet_binary[i : i + 8], 2) for i in range(0, len(packet_binary), 8))
         packet = bytearray(packet)
 
-        data, ecc = packet[:-bch.ecc_bytes], packet[-bch.ecc_bytes:]
-
         decoded = np.asarray(decoded_data, dtype=int).tolist()
-        print(i + 1)
+
         err = 0
         n = 200
         for i in range(n):
@@ -92,14 +84,19 @@ def main():
         ber = err/n
         ber_list.append(ber)
         index = index + 1
-        print('Total error', err)
-        print('a', filename)
 
-    avg_ber = sum(ber_list) / index
-    f = open(ber_file_path, "w+")
-    f.write(f"The average ber value from {index - 1} images is: {avg_ber} ")
+    print('Total error', err)
+    print('Decoded data:', decoded)
+    decoded_bits = ''.join(map(str,  np.asarray(decoded_data, dtype=int)))
+    print('Decoded bits', decoded_bits)
 
-    print('-------Finished-------')
+    data, ecc = packet[:-bch.ecc_bytes], packet[-bch.ecc_bytes:]
+
+    code = data.decode("utf-8", 'ignore')
+    decoded_string = code.replace("*", "")
+
+    print('decoded_string', decoded_string)
+
 
 if __name__ == "__main__":
     main()

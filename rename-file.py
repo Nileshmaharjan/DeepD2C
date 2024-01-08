@@ -1,6 +1,7 @@
 # import os
 #dirpath = r'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/reference_images'
-dirpath = r'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/resolution/flash/1280x720/not_aligned'
+# dirpath = r'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/resolution/flash/1280x720/not_aligned'
+dirpath = r'C:/DL lecture slides/DeepD2C/ber_test_screen_brightness/new_test/not_aligned'
 import os
 import re
 

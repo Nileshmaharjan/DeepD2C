@@ -11,10 +11,10 @@ import time
 start_time = time.time()
 import os
 import datetime
-from calculations import psnr
+# from calculations import psnr
 
 BCH_POLYNOMIAL = 137
-BCH_BITS = 15
+BCH_BITS = 7
 
 
 def main():
@@ -25,18 +25,19 @@ def main():
     secret_message = os.getenv('secret')
     secret_size = os.getenv('secret_size')
 
-    # create experiment directory and within it checkerboard, encoded image directory and binary txt file directory
     date = datetime.datetime.now()
     experiment_directory_name = date.strftime("%b") + "-" + date.strftime("%d") + "-" + date.strftime("%H") + "-" + date.strftime("%M") + "-" + date.strftime("%S") + "-" + date.strftime("%p")
 
-    experiment_directory_path = root_directory + experiment_directory_name
+    experiment_directory_path = root_directory + "/" + experiment_directory_name
     checkerboard_file_directory_name = "/checkerboard-{}".format(int(time.time()))
     checkerboard_file_directory_path = experiment_directory_path + checkerboard_file_directory_name
     encoded_file_directory_name = "/encoded"
     encoded_file_directory_path = experiment_directory_path + encoded_file_directory_name
+
     print("YOU NEED TO CHANGE CHECKERBOARD PATH AND ENCODED FILE PATH AFTER RUNNING ENCODE.PY")
     print("Checkerboard file directory path: ", checkerboard_file_directory_path)
     print("Encoded file directory path: ", encoded_file_directory_path)
+
     binary_input_file_name = "binary_input.txt"
     binary_input_file_path = experiment_directory_path + '/' + binary_input_file_name
     psnr_file_name = "psnr.txt"
@@ -62,6 +63,8 @@ def main():
     parser.add_argument('--checkerboard_save_dir', type=str, default=checkerboard_file_directory_path)
     args = parser.parse_args()
 
+
+
     if args.image is not None:
         files_list = [args.image]
     elif args.images_dir is not None:
@@ -69,6 +72,14 @@ def main():
     else:
         print('Missing input image')
         return
+
+    # Check the length of the secret_message and add "$$" if needed
+
+    if len(args.secret) < 18:
+        args.secret += "*" * ((18 - len(args.secret)))
+    elif len(args.secret) > 18:
+        print("Warning: Secret message is longer than 18 characters. Truncating.")
+        args.secret = args.secret[:18]
 
     sess = tf.InteractiveSession(graph=tf.Graph())
 
@@ -89,21 +100,17 @@ def main():
     height = 256
 
     bch = bchlib.BCH(BCH_POLYNOMIAL, BCH_BITS)
-    print(len(args.secret))
-    if len(args.secret) > 70:
-        print('Error: Can only encode 56bits (7 characters) with ECC')
-        return
 
-    # data = bytearray(args.secret + ' '*(7-len(args.secret)), 'utf-8')
-    data = bytearray(args.secret, 'utf-8')
+    # data = bytearray(args.secret, 'utf-8')
+    data = bytearray(args.secret + ' '*(7-len(args.secret)), 'utf-8')
 
     #BCH encoding
     ecc = bch.encode(data)
     packet = data + ecc
-    print("data len:", len(data), ", ecc len:", len(ecc))
     packet_binary = ''.join(format(x, '08b') for x in packet)
 
     secret = [int(x) for x in packet_binary]
+
     np.savetxt(binary_input_file_path, secret, fmt='% 4d', delimiter=' ')
     secret_array = np.array(secret)
     print(f"The secret array shape is {secret_array.shape}")
@@ -125,11 +132,11 @@ def main():
             image /= 255.
 
             feed_dict = {input_secret:[secret],
-                         input_image:[image]}
+                         input_image:[image],
+                         }
 
             hidden_img, residual = sess.run([output_stegastamp, output_residual],feed_dict=feed_dict)
 
-            #residual : data checkerboard image
             residual = np.squeeze(residual, axis=0)
             residual = residual[:, :, 0]
             img = Image.fromarray(residual, 'L')
@@ -138,12 +145,10 @@ def main():
             img.save(checkerboard_file_directory_path+ f"/{counter}" + "." + "jpg")
             counter += 1
 
-            #hidden_img : data embedded image
             rescaled = (hidden_img[0] * 255).astype(np.uint8)
 
             raw_img = (image * 255).astype(np.uint8)
 
-            #what is this??
             residual = residual[0]+.5
 
             residual = (residual * 255).astype(np.uint8)
@@ -157,17 +162,19 @@ def main():
             input_image_path = test_image_directory + '/' + str(index)+'.jpg'
             index = index + 1
 
-            psnr_value = psnr.calculate_psnr(input_image_path, encoded_image_path)
-            print('psnr_value', psnr_value)
-            psnr_values.append(psnr_value)
+            # psnr_value = psnr.calculate_psnr(input_image_path, encoded_image_path)
+            # print('psnr_value', psnr_value)
+            # psnr_values.append(psnr_value)
+            # print('here')
 
         # only calculate this value if images are provided and not a single image
-        max_psnr = np.max(psnr_values)
-        f = open(psnr_file_path, "w+")
-        f.write(f"The highest psnr value from {index - 1} images is: {max_psnr} ")
+        # max_psnr = np.max(psnr_values)
+        # f = open(psnr_file_path, "w+")
+        # f.write(f"The highest psnr value from {index - 1} images is: {max_psnr} ")
 
 
 if __name__ == "__main__":
     main()
 
 print("--- %s seconds ---" % (time.time() - start_time))
+
